@@ -1,0 +1,3272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyFlow — Управление учебными задачами и дедлайнами</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #F1F5F9;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+    
+    /* Тёмная тема (Dark Mode) */
+    html.dark body {
+      background-color: #0B1120 !important;
+      color: #F1F5F9 !important;
+    }
+    html.dark header,
+    html.dark .bg-white {
+      background-color: #1E293B !important;
+      color: #F1F5F9 !important;
+    }
+    html.dark nav.bg-slate-50,
+    html.dark .bg-slate-50 {
+      background-color: #0F172A !important;
+      color: #E2E8F0 !important;
+    }
+    html.dark .bg-slate-100 {
+      background-color: #334155 !important;
+      color: #F1F5F9 !important;
+    }
+    html.dark .border-slate-200,
+    html.dark .border-slate-200\/80,
+    html.dark .border-slate-100,
+    html.dark .border-slate-300 {
+      border-color: #334155 !important;
+    }
+    html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+      border-color: #334155 !important;
+    }
+    html.dark .text-slate-900,
+    html.dark .text-slate-800 {
+      color: #F8FAFC !important;
+    }
+    html.dark .text-slate-700,
+    html.dark .text-slate-600 {
+      color: #CBD5E1 !important;
+    }
+    html.dark .text-slate-500,
+    html.dark .text-slate-400 {
+      color: #94A3B8 !important;
+    }
+    html.dark input,
+    html.dark select,
+    html.dark textarea {
+      background-color: #0F172A !important;
+      color: #F8FAFC !important;
+      border-color: #475569 !important;
+    }
+    html.dark input::placeholder,
+    html.dark textarea::placeholder {
+      color: #64748B !important;
+    }
+    html.dark .bg-blue-50,
+    html.dark .bg-blue-50\/60,
+    html.dark .bg-blue-50\/70 {
+      background-color: rgba(37, 99, 235, 0.18) !important;
+      color: #93C5FD !important;
+      border-color: rgba(59, 130, 246, 0.35) !important;
+    }
+    html.dark .text-blue-700,
+    html.dark .text-blue-800,
+    html.dark .text-blue-900 {
+      color: #93C5FD !important;
+    }
+    html.dark .bg-rose-50,
+    html.dark .bg-rose-50\/70,
+    html.dark .bg-rose-100 {
+      background-color: rgba(225, 29, 72, 0.18) !important;
+      color: #FDA4AF !important;
+      border-color: rgba(244, 63, 94, 0.35) !important;
+    }
+    html.dark .text-rose-700,
+    html.dark .text-rose-800,
+    html.dark .text-rose-900 {
+      color: #FDA4AF !important;
+    }
+    html.dark .bg-emerald-50,
+    html.dark .bg-emerald-100 {
+      background-color: rgba(16, 185, 129, 0.18) !important;
+      color: #6EE7B7 !important;
+      border-color: rgba(16, 185, 129, 0.35) !important;
+    }
+    html.dark .text-emerald-800 {
+      color: #6EE7B7 !important;
+    }
+    html.dark .bg-amber-50,
+    html.dark .bg-amber-100 {
+      background-color: rgba(245, 158, 11, 0.18) !important;
+      color: #FCD34D !important;
+      border-color: rgba(245, 158, 11, 0.35) !important;
+    }
+    html.dark .text-amber-900 {
+      color: #FCD34D !important;
+    }
+    html.dark .hover\:bg-slate-50:hover,
+    html.dark .hover\:bg-slate-100:hover,
+    html.dark .hover\:bg-slate-200\/70:hover {
+      background-color: #334155 !important;
+    }
+    html.dark .custom-scroll::-webkit-scrollbar-track {
+      background: #0F172A;
+    }
+    html.dark .custom-scroll::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #FFFFFF; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- УВЕДОМЛЕНИЯ (TOAST) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- ШАПКА САЙТА (ПО ТЗ: логотип, название сервиса, строка поиска по задачам и предметам, панель профиля пользователя) -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Логотип и название сервиса -->
+      <div class="flex items-center gap-3 cursor-pointer" id="brandLogoBtn">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-sm shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-lg tracking-tight text-slate-900">StudyFlow</span>
+            <span id="roleBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300">Гость</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Управление учебными задачами и дедлайнами</p>
+        </div>
+      </div>
+
+      <!-- Строка поиска по задачам и предметам (отображается для авторизованного студента) -->
+      <div id="globalSearchWrapper" class="flex-1 max-w-md mx-2 min-w-[200px] hidden">
+        <div class="relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input
+            type="text"
+            id="globalSearchInput"
+            placeholder="Поиск по учебным задачам и дисциплинам..."
+            class="w-full pl-10 pr-8 py-2 bg-slate-100 hover:bg-slate-200/70 focus:bg-white rounded-xl text-sm border border-transparent focus:border-blue-500 focus:outline-none transition"
+          >
+          <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1">✕</button>
+        </div>
+      </div>
+
+      <!-- Правая часть шапки: смена языка, смена темы, кнопка напоминаний и панель профиля пользователя -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- Переключатель языка (RU / EN) -->
+        <button type="button" id="langToggleBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition flex items-center gap-1.5" title="Сменить язык / Switch language">
+          <span>🌐</span>
+          <span id="langToggleLabel">RU</span>
+        </button>
+
+        <!-- Переключатель темы (Светлая / Тёмная) -->
+        <button type="button" id="themeToggleBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5" title="Переключить тему (Светлая / Тёмная)">
+          <span id="themeToggleIcon">🌙</span>
+          <span id="themeToggleLabel" class="hidden md:inline">Тёмная</span>
+        </button>
+
+        <!-- Кнопка напоминаний (для авторизованного студента) -->
+        <button type="button" id="remindersDrawerBtn" class="hidden relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Напоминания о дедлайнах">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span id="reminderCountBadge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center">4</span>
+        </button>
+
+        <!-- Панель профиля пользователя / кнопки входа -->
+        <div id="headerProfilePanel" class="flex items-center gap-2.5">
+          <!-- Заполняется динамически -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ГОРИЗОНТАЛЬНОЕ МЕНЮ НАВИГАЦИИ ПОД ШАПКОЙ -->
+    <nav class="bg-slate-50 border-t border-slate-200/80">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between overflow-x-auto custom-scroll">
+        <div id="mainNavLinks" class="flex items-center space-x-1 py-1.5">
+          <!-- Заполняется динамически в зависимости от текущей авторизованной роли -->
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ОСНОВНОЙ КОНТЕНТ -->
+  <main id="appMainContent" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+    <!-- Динамически рендерится активный раздел -->
+  </main>
+
+  <!-- ПОДВАЛ САЙТА (ПО ТЗ: реквизиты, ссылки на социальные сети и служебная информация) -->
+  <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-12 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+      <div>
+        <div class="flex items-center gap-2 text-white font-bold text-sm mb-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+          StudyFlow — Система управления учебными задачами
+        </div>
+        <p class="text-slate-400 leading-relaxed">
+          Единое веб-приложение для планирования и приоритизации учебных работ, контроля расписания занятий, настройки напоминаний о дедлайнах и экспорта отчётов об успеваемости.
+        </p>
+      </div>
+      <div>
+        <div class="text-white font-semibold mb-2">Реквизиты и служебная информация</div>
+        <p>Исполнитель: Захар • Курсовой проект</p>
+        <p>Серверная часть: C# (ASP.NET Core 8.0) • СУБД: PostgreSQL 15</p>
+        <p>Клиентская часть: HTML5, CSS3, JavaScript (Chrome, Yandex, Windows, macOS)</p>
+        <p>Служба техподдержки: support@studyflow.edu.ru | +7 (495) 123-45-67</p>
+      </div>
+      <div>
+        <div class="text-white font-semibold mb-2">Социальные сети и ресурсы</div>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <button type="button" data-action="social-link" data-network="Официальный Telegram-канал StudyFlow" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">Telegram</button>
+          <button type="button" data-action="social-link" data-network="Сообщество ВКонтакте StudyFlow" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">ВКонтакте</button>
+          <button type="button" data-action="social-link" data-network="Образовательный портал вуза" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">GitHub</button>
+        </div>
+        <p class="text-slate-500">© 2026 StudyFlow. Все права защищены. ИНН 7701234567 / ОГРН 1027700123456.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ / РЕДАКТИРОВАНИЯ ЗАДАЧИ -->
+  <div id="taskModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="taskModalTitle" class="font-bold text-base text-slate-900">Новая учебная задача</h3>
+        <button type="button" id="closeTaskModalBtn" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">✕</button>
+      </div>
+      <form id="taskForm" class="p-6 space-y-4 overflow-y-auto custom-scroll text-sm">
+        <input type="hidden" id="taskFormId">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Наименование задачи *</label>
+          <input type="text" id="taskFormTitle" required maxlength="200" placeholder="Например: Лабораторная работа №5 по PostgreSQL" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Учебная дисциплина *</label>
+            <select id="taskFormDiscipline" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Тип учебной работы *</label>
+            <select id="taskFormType" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:outline-none"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Дата и время дедлайна *</label>
+            <input type="datetime-local" id="taskFormDeadline" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Приоритет *</label>
+            <select id="taskFormPriority" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Статус выполнения *</label>
+            <select id="taskFormStatus" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:outline-none"></select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Привязка к паре в расписании (необязательно)</label>
+          <select id="taskFormSchedule" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:border-blue-600 focus:outline-none"></select>
+          <p class="text-[11px] text-slate-500 mt-1">Позволяет привязать сдачу работы к конкретной паре, на которой запланирована её защита.</p>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Описание задачи</label>
+          <textarea id="taskFormDesc" rows="3" placeholder="Требования к оформлению, вариант задания, комментарии..." class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none"></textarea>
+        </div>
+        <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-xs text-blue-900">
+          <div class="font-semibold mb-1.5">Настройка напоминаний о приближающемся сроке сдачи:</div>
+          <div class="flex flex-wrap gap-4">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="rem3d" checked class="rounded text-blue-600"> За 3 дня до дедлайна</label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="rem24h" checked class="rounded text-blue-600"> За 24 часа до дедлайна</label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="remDay" checked class="rounded text-blue-600"> В день наступления дедлайна</label>
+          </div>
+        </div>
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-200">
+          <button type="button" id="cancelTaskModalBtn" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium">Отмена</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm">Сохранить задачу</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО НАПОМИНАНИЙ О ДЕДЛАЙНАХ -->
+  <div id="remindersModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden max-h-[85vh] flex flex-col">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">Напоминания о приближающихся дедлайнах</h3>
+          <p class="text-xs text-slate-500">Уведомления за 3 дня, за 24 часа и в день наступления дедлайна</p>
+        </div>
+        <button type="button" id="closeRemindersModalBtn" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">✕</button>
+      </div>
+      <div id="remindersModalBody" class="p-5 overflow-y-auto custom-scroll space-y-3 text-sm flex-1"></div>
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button type="button" id="markAllRemindersSentBtn" class="text-xs font-semibold text-blue-600 hover:text-blue-800">Отметить все как прочитанные</button>
+        <button type="button" id="closeRemindersBottomBtn" class="px-4 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-semibold">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО КОРРЕКТИРОВКИ УЧЁТНОЙ ЗАПИСИ СТУДЕНТА (ДЛЯ АДМИНИСТРАТОРА) -->
+  <div id="adminEditUserModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="font-bold text-base text-slate-900">Корректировка учётной записи студента</h3>
+        <button type="button" id="closeAdminUserModalBtn" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">✕</button>
+      </div>
+      <form id="adminEditUserForm" class="p-6 space-y-4 text-sm">
+        <input type="hidden" id="admEditUserId">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Фамилия *</label>
+            <input type="text" id="admEditUserLast" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Имя *</label>
+            <input type="text" id="admEditUserFirst" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Отчество</label>
+            <input type="text" id="admEditUserPatr" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Email (логин) *</label>
+            <input type="email" id="admEditUserEmail" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Телефон</label>
+            <input type="tel" id="admEditUserPhone" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Учебная группа</label>
+          <select id="admEditUserGroup" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Причина блокировки (если аккаунт блокируется)</label>
+          <input type="text" id="admEditUserBlockReason" placeholder="Укажите причину при необходимости..." class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+        </div>
+        <div class="pt-2 flex justify-end gap-2 border-t border-slate-200">
+          <button type="button" id="cancelAdminUserModalBtn" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold">Отмена</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold">Сохранить изменения</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // БАЗА ДАННЫХ (15 ТАБЛИЦ ПО ER-ДИАГРАММЕ И ТЗ)
+    // =========================================================================
+    const INITIAL_DB = {
+      priorities: [
+        { id: 1, name: 'Низкий', level: 1, color: '#10B981' },
+        { id: 2, name: 'Средний', level: 2, color: '#3B82F6' },
+        { id: 3, name: 'Высокий', level: 3, color: '#F59E0B' },
+        { id: 4, name: 'Критический', level: 4, color: '#EF4444' }
+      ],
+      statuses: [
+        { id: 1, name: 'К выполнению', color: '#64748B', is_final: false },
+        { id: 2, name: 'В процессе', color: '#2563EB', is_final: false },
+        { id: 3, name: 'Сдано', color: '#16A34A', is_final: true },
+        { id: 4, name: 'Просрочено', color: '#DC2626', is_final: false }
+      ],
+      task_types: [
+        { id: 1, name: 'Лабораторная работа' },
+        { id: 2, name: 'Практическая работа' },
+        { id: 3, name: 'Курсовая работа' }
+      ],
+      reminder_types: [
+        { id: 1, name: 'За 3 дня до дедлайна', offset_seconds: 259200 },
+        { id: 2, name: 'За 24 часа до дедлайна', offset_seconds: 86400 },
+        { id: 3, name: 'В день наступления дедлайна', offset_seconds: 10800 }
+      ],
+      disciplines: [
+        { id: 1, name: 'Проектирование и разработка веб-приложений', description: 'Разработка серверных приложений на C# ASP.NET Core, REST API и клиентской части.' },
+        { id: 2, name: 'Системы управления базами данных', description: 'Проектирование реляционных БД, ER-диаграммы, язык запросов SQL и СУБД PostgreSQL.' },
+        { id: 3, name: 'Инженерия программного обеспечения', description: 'Разработка технического задания, UML-моделирование (Use Case, Activity) и тестирование ПО.' },
+        { id: 4, name: 'Алгоритмы и структуры данных', description: 'Сбалансированные деревья, алгоритмы на графах, хеш-таблицы и оценка сложности.' },
+        { id: 5, name: 'Компьютерные сети и телекоммуникации', description: 'Стек протоколов TCP/IP, маршрутизация, диагностика трафика и безопасность.' }
+      ],
+      teachers: [
+        { id: 1, last_name: 'Соколов', first_name: 'Андрей', patronymic: 'Викторович', email: 'sokolov.av@uni.edu.ru', phone: '+7 (916) 240-11-22', degree: 'к.т.н., доцент' },
+        { id: 2, last_name: 'Морозова', first_name: 'Елена', patronymic: 'Сергеевна', email: 'morozova.es@uni.edu.ru', phone: '+7 (916) 355-44-18', degree: 'к.ф.-м.н., доцент' },
+        { id: 3, last_name: 'Волков', first_name: 'Дмитрий', patronymic: 'Игоревич', email: 'volkov.di@uni.edu.ru', phone: '+7 (925) 780-90-05', degree: 'ст. преподаватель' },
+        { id: 4, last_name: 'Кравцова', first_name: 'Ольга', patronymic: 'Николаевна', email: 'kravtsova.on@uni.edu.ru', phone: '+7 (903) 512-33-67', degree: 'д.т.н., профессор' }
+      ],
+      teacher_disciplines: [
+        { teacher_id: 1, discipline_id: 1 },
+        { teacher_id: 2, discipline_id: 2 },
+        { teacher_id: 4, discipline_id: 3 },
+        { teacher_id: 3, discipline_id: 4 },
+        { teacher_id: 3, discipline_id: 5 }
+      ],
+      groups: [
+        { id: 1, name: 'ИСП-23', course: 4, start_year: 2023 },
+        { id: 2, name: 'ИСП-24', course: 3, start_year: 2024 },
+        { id: 3, name: 'ТМ-26', course: 1, start_year: 2026 },
+        { id: 4, name: 'Л-24', course: 3, start_year: 2024 },
+        { id: 5, name: 'Л-25', course: 2, start_year: 2025 },
+        { id: 6, name: 'Р-25', course: 2, start_year: 2025 },
+        { id: 7, name: 'Р-26', course: 1, start_year: 2026 },
+        { id: 8, name: 'ПОРТ-24', course: 3, start_year: 2024 },
+        { id: 9, name: 'ПОРТ-26', course: 1, start_year: 2026 },
+        { id: 10, name: 'ДПИ-25', course: 2, start_year: 2025 },
+        { id: 11, name: 'РМ-25', course: 2, start_year: 2025 },
+        { id: 12, name: 'РМ-26', course: 1, start_year: 2026 },
+        { id: 13, name: 'ЭРМА-24', course: 3, start_year: 2024 },
+        { id: 14, name: 'ДО-24', course: 3, start_year: 2024 },
+        { id: 15, name: 'МСР-26', course: 1, start_year: 2026 },
+        { id: 16, name: 'МСР-25', course: 2, start_year: 2025 },
+        { id: 17, name: 'МСР-24', course: 3, start_year: 2024 },
+        { id: 18, name: 'МШИ-26', course: 1, start_year: 2026 },
+        { id: 19, name: 'МШИ-25', course: 2, start_year: 2025 }
+      ],
+      group_disciplines: [
+        { group_id: 1, discipline_id: 1, teacher_id: 1 },
+        { group_id: 1, discipline_id: 2, teacher_id: 2 },
+        { group_id: 1, discipline_id: 3, teacher_id: 4 },
+        { group_id: 1, discipline_id: 4, teacher_id: 3 },
+        { group_id: 1, discipline_id: 5, teacher_id: 3 }
+      ],
+      schedule: [
+        { id: 1, group_id: 1, discipline_id: 1, teacher_id: 1, day_of_week: 1, pair_number: 1, is_even_week: false, audience: 'Ауд. 402 (К-1)', start_time: '09:00', end_time: '10:30' },
+        { id: 2, group_id: 1, discipline_id: 2, teacher_id: 2, day_of_week: 1, pair_number: 2, is_even_week: false, audience: 'Лаб. 305 (К-1)', start_time: '10:45', end_time: '12:15' },
+        { id: 3, group_id: 1, discipline_id: 3, teacher_id: 4, day_of_week: 2, pair_number: 1, is_even_week: false, audience: 'Ауд. 210 (К-2)', start_time: '09:00', end_time: '10:30' },
+        { id: 4, group_id: 1, discipline_id: 4, teacher_id: 3, day_of_week: 3, pair_number: 2, is_even_week: false, audience: 'Ауд. 408 (К-1)', start_time: '10:45', end_time: '12:15' },
+        { id: 5, group_id: 1, discipline_id: 1, teacher_id: 1, day_of_week: 4, pair_number: 3, is_even_week: false, audience: 'Лаб. 404 (К-1)', start_time: '13:00', end_time: '14:30' },
+        { id: 6, group_id: 1, discipline_id: 5, teacher_id: 3, day_of_week: 5, pair_number: 1, is_even_week: false, audience: 'Ауд. 112 (К-1)', start_time: '09:00', end_time: '10:30' },
+        { id: 7, group_id: 1, discipline_id: 2, teacher_id: 2, day_of_week: 1, pair_number: 1, is_even_week: true, audience: 'Лаб. 305 (К-1)', start_time: '09:00', end_time: '10:30' },
+        { id: 8, group_id: 1, discipline_id: 1, teacher_id: 1, day_of_week: 2, pair_number: 2, is_even_week: true, audience: 'Лаб. 404 (К-1)', start_time: '10:45', end_time: '12:15' },
+        { id: 9, group_id: 1, discipline_id: 3, teacher_id: 4, day_of_week: 3, pair_number: 1, is_even_week: true, audience: 'Ауд. 210 (К-2)', start_time: '09:00', end_time: '10:30' },
+        { id: 10, group_id: 1, discipline_id: 4, teacher_id: 3, day_of_week: 4, pair_number: 2, is_even_week: true, audience: 'Ауд. 408 (К-1)', start_time: '10:45', end_time: '12:15' },
+        { id: 11, group_id: 1, discipline_id: 5, teacher_id: 3, day_of_week: 5, pair_number: 2, is_even_week: true, audience: 'Лаб. 115 (К-1)', start_time: '10:45', end_time: '12:15' }
+      ],
+      admins: [
+        { id: 1, login: 'admin', password_hash: 'admin123', full_name: 'Администратор Учебного Отдела', is_super_admin: true, last_login_at: '2026-10-24T09:15:00' }
+      ],
+      users: [
+        { id: 1, last_name: 'Иванов', first_name: 'Захар', patronymic: 'Александрович', email: 'zahar@student.edu.ru', phone: '+7 (999) 123-45-67', password_hash: '123456', group_id: 1, registration_date: '2026-09-01T10:00:00', is_admin: false, is_blocked: false, block_reason: '' },
+        { id: 2, last_name: 'Смирнова', first_name: 'Анна', patronymic: 'Дмитриевна', email: 'smirnova.ad@student.edu.ru', phone: '+7 (999) 234-56-78', password_hash: '123456', group_id: 1, registration_date: '2026-09-02T14:20:00', is_admin: false, is_blocked: false, block_reason: '' },
+        { id: 3, last_name: 'Кузнецов', first_name: 'Максим', patronymic: 'Олегович', email: 'kuznetsov.mo@student.edu.ru', phone: '+7 (999) 345-67-89', password_hash: '123456', group_id: 2, registration_date: '2026-09-05T09:15:00', is_admin: false, is_blocked: true, block_reason: 'Академический отпуск / блокировка учётной записи' }
+      ],
+      tasks: [
+        { id: 1, title: 'Защита ER-диаграммы и DDL-скрипта БД PostgreSQL', description: 'Подготовить физическую схему из 15 таблиц, внешние ключи, индексы и заполнить справочники.', deadline: '2026-10-20T12:15', priority_id: 4, status_id: 2, type_id: 1, discipline_id: 2, user_id: 1, schedule_id: 2, created_at: '2026-10-05T11:00', completed_at: null },
+        { id: 2, title: 'Разработка контроллеров ASP.NET Core и авторизации', description: 'Реализовать регистрацию со сверкой паролей, вход студента по email и панель администратора.', deadline: '2026-10-22T14:30', priority_id: 4, status_id: 2, type_id: 3, discipline_id: 1, user_id: 1, schedule_id: 5, created_at: '2026-10-07T15:30', completed_at: null },
+        { id: 3, title: 'Построение диаграмм Use Case и блок-схем процессов', description: 'Сформировать диаграмму прецедентов и 3 блок-схемы (регистрация, авторизация, основной процесс).', deadline: '2026-10-16T10:30', priority_id: 3, status_id: 3, type_id: 2, discipline_id: 3, user_id: 1, schedule_id: 3, created_at: '2026-10-03T09:00', completed_at: '2026-10-15T18:40' },
+        { id: 4, title: 'Лабораторная работа №4: Сбалансированные деревья поиска', description: 'Реализовать АВЛ-дерево и красно-чёрное дерево на C#, провести замеры времени.', deadline: '2026-10-23T10:45', priority_id: 2, status_id: 1, type_id: 1, discipline_id: 4, user_id: 1, schedule_id: 4, created_at: '2026-10-10T12:00', completed_at: null },
+        { id: 5, title: 'Анализ трафика протокола HTTPS в Wireshark', description: 'Описать процедуру TLS Handshake и предоставить отчёт по захваченным пакетам.', deadline: '2026-10-14T09:00', priority_id: 3, status_id: 4, type_id: 1, discipline_id: 5, user_id: 1, schedule_id: 6, created_at: '2026-10-01T16:00', completed_at: null },
+        { id: 6, title: 'Реализация модуля экспорта отчётов в XLSX и PDF', description: 'Подключить генерацию табличного отчёта успеваемости и логирование в report_exports.', deadline: '2026-10-25T13:00', priority_id: 3, status_id: 1, type_id: 3, discipline_id: 1, user_id: 1, schedule_id: 5, created_at: '2026-10-12T10:20', completed_at: null },
+        { id: 7, title: 'Нормализация отношений до 3НФ и BCNF', description: 'Выполнить декомпозицию таблиц и доказать отсутствие аномалий обновления.', deadline: '2026-10-19T10:45', priority_id: 4, status_id: 1, type_id: 2, discipline_id: 2, user_id: 1, schedule_id: 2, created_at: '2026-10-11T09:30', completed_at: null },
+        { id: 8, title: 'Тестирование веб-приложения в Chrome и Yandex', description: 'Провести функциональное и кроссбраузерное тестирование по тест-кейсам ТЗ.', deadline: '2026-10-27T15:00', priority_id: 2, status_id: 1, type_id: 3, discipline_id: 3, user_id: 2, schedule_id: 3, created_at: '2026-10-14T11:00', completed_at: null }
+      ],
+      reminders: [
+        { id: 1, task_id: 1, user_id: 1, reminder_type_id: 1, scheduled_at: '2026-10-17T12:15', sent_at: '2026-10-17T12:15', is_sent: true },
+        { id: 2, task_id: 1, user_id: 1, reminder_type_id: 2, scheduled_at: '2026-10-19T12:15', sent_at: null, is_sent: false },
+        { id: 3, task_id: 1, user_id: 1, reminder_type_id: 3, scheduled_at: '2026-10-20T09:00', sent_at: null, is_sent: false },
+        { id: 4, task_id: 7, user_id: 1, reminder_type_id: 2, scheduled_at: '2026-10-18T10:45', sent_at: null, is_sent: false },
+        { id: 5, task_id: 2, user_id: 1, reminder_type_id: 1, scheduled_at: '2026-10-19T14:30', sent_at: null, is_sent: false }
+      ],
+      report_exports: [
+        { id: 1, user_id: 1, format: 'XLSX', period_from: '2026-09-01', period_to: '2026-10-15', created_at: '2026-10-15T19:00' },
+        { id: 2, user_id: 1, format: 'PDF', period_from: '2026-10-01', period_to: '2026-10-31', created_at: '2026-10-17T14:10' }
+      ]
+    };
+
+    // Цвета дисциплин для цветовой дифференциации в календаре (по ТЗ)
+    const DISCIPLINE_COLORS = ['#2563EB', '#7C3AED', '#0D9488', '#D97706', '#DB2777', '#4F46E5', '#059669'];
+
+    function getDisciplineColor(discId) {
+      const idx = Math.max(0, Number(discId) - 1) % DISCIPLINE_COLORS.length;
+      return DISCIPLINE_COLORS[idx];
+    }
+
+    // Загрузка базы данных из localStorage
+    let db = JSON.parse(JSON.stringify(INITIAL_DB));
+    try {
+      const saved = localStorage.getItem('studyflow_db_v2');
+      if (saved) {
+        db = JSON.parse(saved);
+      } else {
+        localStorage.setItem('studyflow_db_v2', JSON.stringify(db));
+      }
+    } catch (e) {}
+
+    function saveDb() {
+      try {
+        localStorage.setItem('studyflow_db_v2', JSON.stringify(db));
+      } catch (e) {}
+    }
+
+    // Состояние приложения и сессии (по умолчанию — неавторизованный Гость на вкладке «Гость»)
+    const state = {
+      role: 'guest', // 'guest' | 'student' | 'admin'
+      currentUserId: null,
+      currentAdminId: null,
+      activeTab: 'guest-home',
+      searchQuery: '',
+      // Фильтры задач
+      taskFilterStatus: 'all',
+      taskFilterPriority: 'all',
+      taskFilterDiscipline: 'all',
+      // Календарь
+      calendarMode: 'week', // 'day' | 'week' | 'month'
+      calendarColorBy: 'priority', // 'priority' (по уровню срочности) | 'discipline' (по учебным дисциплинам)
+      calendarDiscipline: 'all',
+      calendarSelectedDay: '2026-10-20',
+      // Расписание
+      scheduleEvenWeek: false,
+      scheduleGroupId: 1,
+      // Отчёты
+      reportFrom: '2026-10-01',
+      reportTo: '2026-10-31',
+      // Админка: редактирование справочников и фильтрация
+      adminUserGroupFilter: 'all',
+      adminUserStatusFilter: 'all',
+      editingDiscId: null,
+      editingTeacherId: null,
+      editingGroupId: null,
+      editingSchedId: null
+    };
+
+    // Восстановление активной сессии из localStorage (чтобы при выходе оставался Гость)
+    try {
+      const savedSession = localStorage.getItem('studyflow_session_v2');
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed.role === 'student' && parsed.currentUserId) {
+          const u = db.users.find(x => x.id === Number(parsed.currentUserId));
+          if (u && !u.is_blocked) {
+            state.role = 'student';
+            state.currentUserId = u.id;
+            state.scheduleGroupId = u.group_id;
+            state.activeTab = parsed.activeTab || 'dashboard';
+          }
+        } else if (parsed.role === 'admin' && parsed.currentAdminId) {
+          state.role = 'admin';
+          state.currentAdminId = Number(parsed.currentAdminId);
+          state.activeTab = parsed.activeTab || 'admin-users';
+        }
+      }
+    } catch (e) {}
+
+    function saveSession() {
+      try {
+        localStorage.setItem('studyflow_session_v2', JSON.stringify({
+          role: state.role,
+          currentUserId: state.currentUserId,
+          currentAdminId: state.currentAdminId,
+          activeTab: state.activeTab
+        }));
+      } catch (e) {}
+      try {
+        history.replaceState({ role: state.role, activeTab: state.activeTab }, '', '#' + state.activeTab);
+      } catch (e) {}
+    }
+
+    // Защита от возврата кнопкой «Назад» в браузере после выхода из аккаунта
+    window.addEventListener('popstate', () => {
+      if (state.role === 'guest' && !['guest-home', 'login', 'register', 'admin-login'].includes(state.activeTab)) {
+        state.activeTab = 'guest-home';
+      }
+      renderMain();
+    });
+
+    const DAY_NAMES = ['', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    const DAY_SHORT = ['', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const bg = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-slate-900';
+      el.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-medium flex items-center justify-between gap-3 pointer-events-auto transition-all`;
+      el.innerHTML = `<span>${msg}</span><button type="button" class="opacity-75 hover:opacity-100 font-bold">✕</button>`;
+      el.querySelector('button').addEventListener('click', () => el.remove());
+      container.appendChild(el);
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 4000);
+    }
+
+    function getCurrentUser() {
+      return db.users.find(u => u.id === Number(state.currentUserId)) || db.users[0];
+    }
+
+    function getDiscipline(id) {
+      return db.disciplines.find(d => d.id === Number(id)) || { id: 0, name: 'Не указана', description: '' };
+    }
+
+    function getPriority(id) {
+      return db.priorities.find(p => p.id === Number(id)) || db.priorities[0];
+    }
+
+    function getStatus(id) {
+      return db.statuses.find(s => s.id === Number(id)) || db.statuses[0];
+    }
+
+    function getTaskType(id) {
+      return db.task_types.find(t => t.id === Number(id)) || db.task_types[0];
+    }
+
+    function getTeacher(id) {
+      return db.teachers.find(t => t.id === Number(id)) || { id: 0, last_name: 'Не назначен', first_name: '', patronymic: '', degree: '' };
+    }
+
+    function getGroup(id) {
+      return db.groups.find(g => g.id === Number(id)) || { id: 0, name: '—', course: 1, start_year: 2024 };
+    }
+
+    function formatDateTime(dtStr) {
+      if (!dtStr) return '—';
+      const d = new Date(dtStr);
+      if (isNaN(d.getTime())) return dtStr;
+      return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+             d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // =========================================================================
+    // РЕНДЕР ШАПКИ И ГОРИЗОНТАЛЬНОГО МЕНЮ НАВИГАЦИИ
+    // =========================================================================
+    function renderHeaderAndNav() {
+      const roleBadge = document.getElementById('roleBadge');
+      const profilePanel = document.getElementById('headerProfilePanel');
+      const navContainer = document.getElementById('mainNavLinks');
+      const searchWrapper = document.getElementById('globalSearchWrapper');
+      const remBtn = document.getElementById('remindersDrawerBtn');
+
+      if (state.role === 'guest') {
+        roleBadge.textContent = 'Гость (Неавторизован)';
+        roleBadge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300';
+        searchWrapper.classList.add('hidden');
+        remBtn.classList.add('hidden');
+
+        profilePanel.innerHTML = `
+          <button type="button" data-nav="login" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-2xs">Войти</button>
+          <button type="button" data-nav="register" class="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">Регистрация</button>
+          <button type="button" data-nav="admin-login" class="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition hidden sm:inline-block">Вход админа</button>
+        `;
+
+        const guestTabs = [
+          { id: 'guest-home', label: 'Гость (О системе и инструкция)' },
+          { id: 'login', label: 'Вход для студента' },
+          { id: 'register', label: 'Регистрация студента' },
+          { id: 'admin-login', label: 'Вход для администратора' }
+        ];
+        navContainer.innerHTML = guestTabs.map(t => `
+          <button type="button" data-nav="${t.id}" class="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${state.activeTab === t.id ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'}">${t.label}</button>
+        `).join('');
+      } else if (state.role === 'student') {
+        const u = getCurrentUser();
+        const grp = getGroup(u.group_id);
+        roleBadge.textContent = `Студент • ${grp.name}`;
+        roleBadge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200';
+        searchWrapper.classList.remove('hidden');
+        remBtn.classList.remove('hidden');
+
+        const pendingRems = db.reminders.filter(r => r.user_id === u.id && !r.is_sent);
+        const badge = document.getElementById('reminderCountBadge');
+        if (badge) {
+          badge.textContent = pendingRems.length;
+          badge.style.display = pendingRems.length > 0 ? 'flex' : 'none';
+        }
+
+        profilePanel.innerHTML = `
+          <button type="button" data-nav="profile" class="flex items-center gap-2 text-left hover:bg-slate-100 p-1.5 rounded-xl transition" title="Перейти в Личный кабинет">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+              ${u.last_name[0]}${u.first_name[0]}
+            </div>
+            <div class="hidden sm:block leading-tight">
+              <div class="text-xs font-bold text-slate-900">${u.last_name} ${u.first_name}</div>
+              <div class="text-[11px] text-slate-500">${grp.name}, ${grp.course} курс</div>
+            </div>
+          </button>
+          <button type="button" id="logoutBtn" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition text-xs font-semibold" title="Выйти и вернуться на вкладку Гость">Выйти</button>
+        `;
+
+        // Разделы под шапкой строго по ТЗ: Главная (Дашборд), Мои задачи, Календарь, Расписание занятий, Отчёты, Личный кабинет
+        const studentTabs = [
+          { id: 'dashboard', label: 'Главная (Дашборд)' },
+          { id: 'tasks', label: 'Мои задачи' },
+          { id: 'calendar', label: 'Календарь' },
+          { id: 'schedule', label: 'Расписание занятий' },
+          { id: 'reports', label: 'Отчёты' },
+          { id: 'profile', label: 'Личный кабинет' }
+        ];
+        navContainer.innerHTML = studentTabs.map(t => `
+          <button type="button" data-nav="${t.id}" class="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${state.activeTab === t.id ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'}">${t.label}</button>
+        `).join('');
+      } else if (state.role === 'admin') {
+        const adm = db.admins.find(a => a.id === Number(state.currentAdminId)) || db.admins[0];
+        roleBadge.textContent = 'Режим администрирования';
+        roleBadge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200';
+        searchWrapper.classList.add('hidden');
+        remBtn.classList.add('hidden');
+
+        profilePanel.innerHTML = `
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-rose-600 text-white font-bold text-xs flex items-center justify-center">АД</div>
+            <div class="hidden sm:block leading-tight">
+              <div class="text-xs font-bold text-slate-900">${adm.full_name}</div>
+              <div class="text-[11px] text-slate-500">Логин: ${adm.login}</div>
+            </div>
+          </div>
+          <button type="button" id="logoutBtn" class="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition text-xs font-semibold" title="Выйти из панели администратора на вкладку Гость">Выйти</button>
+        `;
+
+        const adminTabs = [
+          { id: 'admin-users', label: 'Пользователи, активность и выборки' },
+          { id: 'admin-disciplines', label: 'Учебные дисциплины и преподаватели' },
+          { id: 'admin-schedule', label: 'Группы и сетка расписания' },
+          { id: 'admin-records', label: 'Управление справочниками и записями' }
+        ];
+        navContainer.innerHTML = adminTabs.map(t => `
+          <button type="button" data-nav="${t.id}" class="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${state.activeTab === t.id ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200/70'}">${t.label}</button>
+        `).join('');
+      }
+    }
+
+    // =========================================================================
+    // ГЛАВНЫЙ РЕНДЕР СТРАНИЦЫ С ПРОВЕРКОЙ ПРАВ ДОСТУПА
+    // =========================================================================
+    function renderMain() {
+      // Защита маршрутов: если роль Гость, разрешены только гостевые вкладки
+      if (state.role === 'guest' && !['guest-home', 'login', 'register', 'admin-login'].includes(state.activeTab)) {
+        state.activeTab = 'guest-home';
+      }
+      if (state.role === 'student' && !['dashboard', 'tasks', 'calendar', 'schedule', 'reports', 'profile'].includes(state.activeTab)) {
+        state.activeTab = 'dashboard';
+      }
+      if (state.role === 'admin' && !['admin-users', 'admin-disciplines', 'admin-schedule', 'admin-records'].includes(state.activeTab)) {
+        state.activeTab = 'admin-users';
+      }
+
+      saveSession();
+      renderHeaderAndNav();
+      const main = document.getElementById('appMainContent');
+
+      if (state.role === 'guest') {
+        if (state.activeTab === 'login') main.innerHTML = renderLoginView();
+        else if (state.activeTab === 'register') main.innerHTML = renderRegisterView();
+        else if (state.activeTab === 'admin-login') main.innerHTML = renderAdminLoginView();
+        else main.innerHTML = renderGuestHomeView();
+      } else if (state.role === 'student') {
+        if (state.activeTab === 'tasks') main.innerHTML = renderTasksView();
+        else if (state.activeTab === 'calendar') main.innerHTML = renderCalendarView();
+        else if (state.activeTab === 'schedule') main.innerHTML = renderScheduleView();
+        else if (state.activeTab === 'reports') main.innerHTML = renderReportsView();
+        else if (state.activeTab === 'profile') main.innerHTML = renderProfileView();
+        else main.innerHTML = renderDashboardView();
+      } else if (state.role === 'admin') {
+        if (state.activeTab === 'admin-disciplines') main.innerHTML = renderAdminDisciplinesView();
+        else if (state.activeTab === 'admin-schedule') main.innerHTML = renderAdminScheduleView();
+        else if (state.activeTab === 'admin-records') main.innerHTML = renderAdminRecordsView();
+        else main.innerHTML = renderAdminUsersView();
+      }
+    }
+
+    // =========================================================================
+    // 1. ГОСТЬ: ОЗНАКОМЛЕНИЕ С ВОЗМОЖНОСТЯМИ, ИНСТРУКЦИЯ, ВХОД И РЕГИСТРАЦИЯ
+    // =========================================================================
+    function renderGuestHomeView() {
+      return `
+        <div class="space-y-8">
+          <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 rounded-3xl p-8 sm:p-10 text-white shadow-lg">
+            <div class="max-w-3xl space-y-4">
+              <span class="inline-block px-3 py-1 rounded-full bg-white/15 text-xs font-semibold backdrop-blur-xs">Режим гостя (Неавторизованный пользователь)</span>
+              <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">Система управления учебными задачами и дедлайнами StudyFlow</h1>
+              <p class="text-sm sm:text-base text-blue-100 leading-relaxed">
+                Единое веб-приложение для студентов и учебного отдела, объединяющее функции планировщика задач (по прототипам Todoist и Notion), интерактивного календаря с расписанием чётной и нечётной недель, автоматических напоминаний и формирования отчётов об успеваемости в форматах XLSX и PDF.
+              </p>
+              <div class="pt-2 flex flex-wrap gap-3">
+                <button type="button" data-nav="login" class="px-5 py-2.5 rounded-xl bg-white text-blue-700 font-bold text-sm shadow-sm hover:bg-blue-50 transition">Войти как студент</button>
+                <button type="button" data-nav="register" class="px-5 py-2.5 rounded-xl bg-blue-600/40 border border-white/30 text-white font-semibold text-sm hover:bg-blue-600/60 transition">Регистрация студента</button>
+                <button type="button" data-nav="admin-login" class="px-5 py-2.5 rounded-xl bg-rose-500/80 hover:bg-rose-600 text-white font-semibold text-sm transition">Панель администратора</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Описание возможностей системы (по ТЗ для неавторизованного пользователя) -->
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Описание возможностей системы</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold mb-3">01</div>
+                <h3 class="font-bold text-sm text-slate-900 mb-1">Ведение и приоритизация учебных задач</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Создание лабораторных, практических и курсовых работ с указанием дисциплины, описания, дедлайна, приоритета («Низкий», «Средний», «Высокий», «Критический») и статуса («К выполнению», «В процессе», «Сдано», «Просрочено»).</p>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold mb-3">02</div>
+                <h3 class="font-bold text-sm text-slate-900 mb-1">Интерактивный календарь и расписание</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Отображение задач по дням, неделям и месяцам с цветовой дифференциацией по срочности и дисциплинам. Интеграция с расписанием пар (чётная/нечётная недели) и привязка сдачи задачи к конкретной паре.</p>
+              </div>
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold mb-3">03</div>
+                <h3 class="font-bold text-sm text-slate-900 mb-1">Напоминания и экспорт отчётов (XLSX / PDF)</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Автоматические напоминания за 3 дня, за 24 часа и в день наступления дедлайна. Формирование статистики успеваемости за выбранный период и выгрузка в Excel (XLSX) или PDF.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Инструкция по началу работы (по ТЗ для неавторизованного пользователя) -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6">
+            <h2 class="text-base font-bold text-slate-900 mb-4">Инструкция по началу работы с системой</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-blue-600 mb-1">Шаг 1. Регистрация</div>
+                <p class="text-slate-600">Перейдите в раздел «Регистрация студента», укажите ФИО (отчество — при наличии), email или телефон, выберите номер группы, курс и задайте пароль.</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-blue-600 mb-1">Шаг 2. Авторизация и профиль</div>
+                <p class="text-slate-600">Войдите по логину (email) и паролю. При необходимости отредактируйте данные, группу или пароль в «Личном кабинете».</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-blue-600 mb-1">Шаг 3. Планирование и календарь</div>
+                <p class="text-slate-600">Добавляйте задачи в разделе «Мои задачи», привязывайте их к парам своего расписания и отслеживайте горящие сроки на дашборде и в календаре.</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-blue-600 mb-1">Шаг 4. Статистика и отчётность</div>
+                <p class="text-slate-600">Отмечайте сданные работы и формируйте отчёты об успеваемости за семестр или месяц с выгрузкой в XLSX или PDF.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLoginView() {
+      return `
+        <div class="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 my-6">
+          <h2 class="text-xl font-bold text-slate-900 mb-1">Вход в личный кабинет студента</h2>
+          <p class="text-xs text-slate-500 mb-6">Вход выполняется по логину (email) и паролю</p>
+          <form id="studentLoginForm" class="space-y-4 text-sm">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Логин (Email) *</label>
+              <input type="email" id="loginEmail" required value="zahar@student.edu.ru" placeholder="student@edu.ru" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Пароль *</label>
+              <input type="password" id="loginPassword" required value="123456" placeholder="Введите пароль" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <div class="flex items-center justify-between">
+                <span><strong>Аккаунт Захара:</strong> zahar@student.edu.ru / 123456</span>
+                <button type="button" id="fillZaharLoginBtn" class="text-blue-600 hover:underline font-semibold">Подставить</button>
+              </div>
+              <div class="flex items-center justify-between">
+                <span><strong>Заблокированный:</strong> kuznetsov.mo@student.edu.ru / 123456</span>
+                <button type="button" id="fillBlockedLoginBtn" class="text-rose-600 hover:underline font-semibold">Проверить</button>
+              </div>
+            </div>
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition">Войти в систему</button>
+            <div class="text-center text-xs text-slate-500 pt-1">
+              Нет учётной записи? <button type="button" data-nav="register" class="text-blue-600 font-semibold hover:underline">Зарегистрироваться</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function renderRegisterView() {
+      const groupOptions = db.groups.map(g => `<option value="${g.id}" data-course="${g.course}">${g.name} (${g.course} курс)</option>`).join('');
+      return `
+        <div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 my-4">
+          <h2 class="text-xl font-bold text-slate-900 mb-1">Регистрация пользователя (студента)</h2>
+          <p class="text-xs text-slate-500 mb-6">Заполните данные анкеты. Поле «Отчество» не является обязательным. Дата регистрации сохраняется в БД автоматически.</p>
+          <form id="studentRegisterForm" class="space-y-4 text-sm">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Фамилия *</label>
+                <input type="text" id="regLastName" required placeholder="Иванов" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Имя *</label>
+                <input type="text" id="regFirstName" required placeholder="Захар" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Отчество (при наличии)</label>
+                <input type="text" id="regPatronymic" placeholder="Необязательно" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Email (логин для входа) *</label>
+                <input type="email" id="regEmail" required placeholder="student@edu.ru" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Телефон *</label>
+                <input type="tel" id="regPhone" required placeholder="+7 (999) 123-45-67" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Номер учебной группы *</label>
+                <select id="regGroupId" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">${groupOptions}</select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Курс *</label>
+                <input type="number" id="regCourse" min="1" max="6" value="4" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Пароль *</label>
+                <input type="password" id="regPassword" required minlength="6" placeholder="Не менее 6 символов" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Подтверждение пароля *</label>
+                <input type="password" id="regConfirm" required minlength="6" placeholder="Повторите пароль" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+            </div>
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition">Зарегистрироваться</button>
+          </form>
+        </div>
+      `;
+    }
+
+    function renderAdminLoginView() {
+      return `
+        <div class="max-w-md mx-auto bg-white rounded-2xl border border-rose-200 shadow-sm p-6 sm:p-8 my-6">
+          <div class="inline-block px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 font-semibold text-xs mb-2">Отдельный механизм авторизации администратора</div>
+          <h2 class="text-xl font-bold text-slate-900 mb-1">Вход в режим администрирования</h2>
+          <p class="text-xs text-slate-500 mb-6">Управление дисциплинами, преподавателями, группами, расписанием и учётными записями пользователей</p>
+          <form id="adminLoginForm" class="space-y-4 text-sm">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Логин администратора *</label>
+              <input type="text" id="adminLoginInput" required value="admin" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Пароль администратора *</label>
+              <input type="password" id="adminPasswordInput" required value="admin123" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl">
+            </div>
+            <div class="bg-rose-50/70 p-3 rounded-xl border border-rose-200 text-xs text-rose-900">
+              Учётные данные администратора (таблица <code>admins</code>): <strong>admin</strong> / <strong>admin123</strong>
+            </div>
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm transition">Войти в панель администратора</button>
+          </form>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 2. СТУДЕНТ: ГЛАВНАЯ СТРАНИЦА (ИНТЕРАКТИВНЫЙ ДАШБОРД ПО ТЗ)
+    // =========================================================================
+    function renderDashboardView() {
+      const user = getCurrentUser();
+      const grp = getGroup(user.group_id);
+      const userTasks = db.tasks.filter(t => t.user_id === user.id);
+
+      const q = state.searchQuery.trim().toLowerCase();
+      const filteredTasks = q
+        ? userTasks.filter(t => t.title.toLowerCase().includes(q) || getDiscipline(t.discipline_id).name.toLowerCase().includes(q))
+        : userTasks;
+
+      const activeTasks = filteredTasks.filter(t => !getStatus(t.status_id).is_final)
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+      const highPriorityTasks = filteredTasks.filter(t => !getStatus(t.status_id).is_final)
+        .sort((a, b) => getPriority(b.priority_id).level - getPriority(a.priority_id).level || new Date(a.deadline) - new Date(b.deadline));
+
+      const completedCount = userTasks.filter(t => t.status_id === 3).length;
+      const inProgressCount = userTasks.filter(t => t.status_id === 2).length;
+      const overdueCount = userTasks.filter(t => t.status_id === 4).length;
+
+      const hotCardsHtml = activeTasks.map(t => {
+        const prio = getPriority(t.priority_id);
+        const disc = getDiscipline(t.discipline_id);
+        const tp = getTaskType(t.type_id);
+        return `
+          <div class="min-w-[275px] sm:min-w-[300px] bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white" style="background:${prio.color}">${prio.name} приоритет</span>
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">${tp.name}</span>
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 line-clamp-2 mb-1">${t.title}</h4>
+              <p class="text-xs text-slate-500 mb-3">${disc.name}</p>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <div>
+                <span class="text-slate-400 block text-[10px]">Срок сдачи (дедлайн):</span>
+                <span class="font-bold text-slate-800">${formatDateTime(t.deadline)}</span>
+              </div>
+              <button type="button" data-edit-task="${t.id}" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold transition">Открыть</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const weekSchedule = db.schedule.filter(s => s.group_id === user.group_id && s.is_even_week === state.scheduleEvenWeek);
+      const weekColsHtml = [1, 2, 3, 4, 5].map(dayNum => {
+        const dayPairs = weekSchedule.filter(s => s.day_of_week === dayNum).sort((a, b) => a.pair_number - b.pair_number);
+        const pairsHtml = dayPairs.map(p => {
+          const disc = getDiscipline(p.discipline_id);
+          const attachedTasks = userTasks.filter(t => Number(t.schedule_id) === p.id);
+          return `
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1">
+              <div class="flex items-center justify-between text-[11px] font-semibold text-blue-700">
+                <span>${p.pair_number} пара (${p.start_time}–${p.end_time})</span>
+                <span class="text-slate-500">${p.audience}</span>
+              </div>
+              <div class="font-semibold text-slate-800 leading-snug">${disc.name}</div>
+              ${attachedTasks.map(at => `
+                <div data-edit-task="${at.id}" class="cursor-pointer mt-1 px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium flex items-center justify-between gap-1">
+                  <span class="truncate">📌 ${at.title}</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }).join('') || `<div class="text-xs text-slate-400 italic py-4 text-center">Занятий нет</div>`;
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col">
+            <div class="font-bold text-xs text-slate-900 pb-2 mb-2 border-b border-slate-100 flex items-center justify-between">
+              <span>${DAY_NAMES[dayNum]}</span>
+              <span class="text-[11px] font-normal text-slate-400">${dayPairs.length} пар(ы)</span>
+            </div>
+            <div class="space-y-2 flex-1">${pairsHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      const priorityRowsHtml = highPriorityTasks.slice(0, 6).map(t => {
+        const prio = getPriority(t.priority_id);
+        const disc = getDiscipline(t.discipline_id);
+        const tp = getTaskType(t.type_id);
+        return `
+          <div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full" style="background:${prio.color}"></span>
+                <span class="font-bold text-sm text-slate-900">${t.title}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded-md font-semibold text-white" style="background:${prio.color}">${prio.name}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">${tp.name}</span>
+              </div>
+              <div class="text-xs text-slate-500">${disc.name} • Дедлайн: <strong class="text-slate-700">${formatDateTime(t.deadline)}</strong></div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <select data-quick-status="${t.id}" aria-label="Статус задачи" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 font-medium">
+                ${db.statuses.map(s => `<option value="${s.id}" ${s.id === t.status_id ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+              <button type="button" data-edit-task="${t.id}" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-700">Изменить</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h1 class="text-xl font-extrabold text-slate-900">Интерактивный дашборд студента</h1>
+              <p class="text-xs text-slate-500 mt-0.5">Студент: <strong>${user.last_name} ${user.first_name} ${user.patronymic || ''}</strong> • Группа: <strong>${grp.name} (${grp.course} курс)</strong></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                Всего задач: <strong class="text-slate-900">${userTasks.length}</strong>
+              </div>
+              <div class="px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
+                В процессе: <strong>${inProgressCount}</strong>
+              </div>
+              <div class="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
+                Сдано: <strong>${completedCount}</strong>
+              </div>
+              <div class="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">
+                Просрочено: <strong>${overdueCount}</strong>
+              </div>
+              <button type="button" id="openNewTaskModalBtn" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">+ Новая задача</button>
+            </div>
+          </div>
+
+          <!-- Карусель ближайших горящих дедлайнов -->
+          <section class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-slate-900">🔥 Карусель ближайших горящих дедлайнов</h2>
+                <p class="text-xs text-slate-500">Задачи с ближайшим сроком сдачи и высоким уровнем срочности</p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="carouselPrevBtn" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold">←</button>
+                <button type="button" id="carouselNextBtn" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold">→</button>
+              </div>
+            </div>
+            <div id="deadlineCarouselTrack" class="flex gap-4 overflow-x-auto custom-scroll pb-2 scroll-smooth">
+              ${hotCardsHtml || `<div class="bg-white rounded-2xl p-6 border border-slate-200 text-xs text-slate-500 w-full text-center">Нет активных задач по текущему запросу.</div>`}
+            </div>
+          </section>
+
+          <!-- Календарная сетка на текущую неделю -->
+          <section class="space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-base font-bold text-slate-900">📅 Календарная сетка на текущую неделю (${grp.name})</h2>
+                <p class="text-xs text-slate-500">Интеграция учебного расписания и привязанных к парам задач</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" id="dashToggleWeekTypeBtn" class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700">
+                  Неделя: ${state.scheduleEvenWeek ? 'Чётная (2-я)' : 'Нечётная (1-я)'} (Сменить)
+                </button>
+                <button type="button" data-nav="calendar" class="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100">Полный календарь →</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+              ${weekColsHtml}
+            </div>
+          </section>
+
+          <!-- Список наиболее приоритетных задач -->
+          <section class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-slate-900">⚡ Список наиболее приоритетных задач</h2>
+                <p class="text-xs text-slate-500">Отсортировано по уровню приоритета и сроку выполнения</p>
+              </div>
+              <button type="button" data-nav="tasks" class="text-xs font-semibold text-blue-600 hover:underline">Перейти ко всем задачам (${userTasks.length}) →</button>
+            </div>
+            <div class="space-y-2.5">
+              ${priorityRowsHtml}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 3. СТУДЕНТ: МОИ ЗАДАЧИ (СОЗДАНИЕ, РЕДАКТИРОВАНИЕ, УДАЛЕНИЕ, СТАТУСЫ)
+    // =========================================================================
+    function renderTasksView() {
+      const user = getCurrentUser();
+      let tasks = db.tasks.filter(t => t.user_id === user.id);
+
+      const q = state.searchQuery.trim().toLowerCase();
+      if (q) {
+        tasks = tasks.filter(t =>
+          t.title.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q)) ||
+          getDiscipline(t.discipline_id).name.toLowerCase().includes(q)
+        );
+      }
+      if (state.taskFilterStatus !== 'all') {
+        tasks = tasks.filter(t => t.status_id === Number(state.taskFilterStatus));
+      }
+      if (state.taskFilterPriority !== 'all') {
+        tasks = tasks.filter(t => t.priority_id === Number(state.taskFilterPriority));
+      }
+      if (state.taskFilterDiscipline !== 'all') {
+        tasks = tasks.filter(t => t.discipline_id === Number(state.taskFilterDiscipline));
+      }
+
+      const rowsHtml = tasks.map(t => {
+        const prio = getPriority(t.priority_id);
+        const st = getStatus(t.status_id);
+        const disc = getDiscipline(t.discipline_id);
+        const tp = getTaskType(t.type_id);
+        const sched = db.schedule.find(s => s.id === Number(t.schedule_id));
+        const schedLabel = sched
+          ? `${DAY_SHORT[sched.day_of_week]}, ${sched.pair_number} пара (${sched.start_time}, ${sched.audience})`
+          : 'Не привязана к паре';
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="space-y-1.5 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white" style="background:${prio.color}">${prio.name}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white" style="background:${st.color}">${st.name}</span>
+                <span class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-medium">${tp.name}</span>
+                <span class="text-xs text-slate-400">ID #${t.id}</span>
+              </div>
+              <h3 class="font-bold text-base text-slate-900">${t.title}</h3>
+              <p class="text-xs text-slate-600">${t.description || 'Без дополнительного описания'}</p>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs text-slate-500">
+                <span>📚 <strong>Дисциплина:</strong> ${disc.name}</span>
+                <span>⏰ <strong>Дедлайн:</strong> <span class="text-slate-900 font-semibold">${formatDateTime(t.deadline)}</span></span>
+                <span>🏫 <strong>Сдача на паре:</strong> ${schedLabel}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-100">
+              <select data-quick-status="${t.id}" aria-label="Изменить статус" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-slate-50 font-semibold">
+                ${db.statuses.map(s => `<option value="${s.id}" ${s.id === t.status_id ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+              <button type="button" data-edit-task="${t.id}" class="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">Редактировать</button>
+              <button type="button" data-delete-task="${t.id}" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition">Удалить</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-bold text-slate-900">Мои учебные задачи</h1>
+              <p class="text-xs text-slate-500">Создание, редактирование и удаление учебных задач (лабораторные, практические, курсовые работы)</p>
+            </div>
+            <button type="button" id="openNewTaskModalBtn" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">+ Добавить задачу</button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Фильтр по статусу выполнения</label>
+              <select id="filterStatusSelect" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+                <option value="all">Все статусы («К выполнению», «В процессе», «Сдано», «Просрочено»)</option>
+                ${db.statuses.map(s => `<option value="${s.id}" ${String(s.id) === String(state.taskFilterStatus) ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Фильтр по приоритету</label>
+              <select id="filterPrioritySelect" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+                <option value="all">Все уровни приоритета</option>
+                ${db.priorities.map(p => `<option value="${p.id}" ${String(p.id) === String(state.taskFilterPriority) ? 'selected' : ''}>${p.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Фильтр по учебной дисциплине</label>
+              <select id="filterDisciplineSelect" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+                <option value="all">Все учебные дисциплины</option>
+                ${db.disciplines.map(d => `<option value="${d.id}" ${String(d.id) === String(state.taskFilterDiscipline) ? 'selected' : ''}>${d.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            ${rowsHtml || `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-sm text-slate-500">Задачи по выбранным фильтрам не найдены.</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 4. СТУДЕНТ: ИНТЕРАКТИВНЫЙ КАЛЕНДАРЬ (ДЕНЬ / НЕДЕЛЯ / МЕСЯЦ + ЦВЕТА ПО СРОЧНОСТИ И ДИСЦИПЛИНАМ)
+    // =========================================================================
+    function getTaskCalendarColor(task) {
+      if (state.calendarColorBy === 'discipline') {
+        return getDisciplineColor(task.discipline_id);
+      }
+      return getPriority(task.priority_id).color;
+    }
+
+    function renderCalendarView() {
+      const user = getCurrentUser();
+      let tasks = db.tasks.filter(t => t.user_id === user.id);
+      if (state.calendarDiscipline !== 'all') {
+        tasks = tasks.filter(t => t.discipline_id === Number(state.calendarDiscipline));
+      }
+
+      let modeBodyHtml = '';
+      if (state.calendarMode === 'day') {
+        const dayTasks = tasks.filter(t => t.deadline.startsWith(state.calendarSelectedDay));
+        modeBodyHtml = `
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Режим отображения «По дням»: ${state.calendarSelectedDay}</h3>
+                <p class="text-xs text-slate-500">Список дедлайнов и занятий на выбранный день</p>
+              </div>
+              <input type="date" id="calendarDayPicker" value="${state.calendarSelectedDay}" class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs">
+            </div>
+            <div class="space-y-2.5">
+              ${dayTasks.map(t => {
+                const cardColor = getTaskCalendarColor(t);
+                const disc = getDiscipline(t.discipline_id);
+                const st = getStatus(t.status_id);
+                return `
+                  <div class="p-4 rounded-xl border-l-4 bg-slate-50 flex items-center justify-between gap-4" style="border-left-color:${cardColor}">
+                    <div>
+                      <div class="text-xs font-bold text-slate-900">${t.title}</div>
+                      <div class="text-xs text-slate-500">${disc.name} • Статус: ${st.name} • Дедлайн: ${formatDateTime(t.deadline)}</div>
+                    </div>
+                    <button type="button" data-edit-task="${t.id}" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold">Открыть</button>
+                  </div>
+                `;
+              }).join('') || `<div class="text-xs text-slate-500 py-6 text-center">На выбранную дату (${state.calendarSelectedDay}) дедлайнов нет. Попробуйте 2026-10-20 или 2026-10-22.</div>`}
+            </div>
+          </div>
+        `;
+      } else if (state.calendarMode === 'week') {
+        const weekDays = [
+          { date: '2026-10-19', label: 'Пн, 19 окт', dow: 1 },
+          { date: '2026-10-20', label: 'Вт, 20 окт', dow: 2 },
+          { date: '2026-10-21', label: 'Ср, 21 окт', dow: 3 },
+          { date: '2026-10-22', label: 'Чт, 22 окт', dow: 4 },
+          { date: '2026-10-23', label: 'Пт, 23 окт', dow: 5 },
+          { date: '2026-10-24', label: 'Сб, 24 окт', dow: 6 }
+        ];
+        modeBodyHtml = `
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            ${weekDays.map(wd => {
+              const dTasks = tasks.filter(t => t.deadline.startsWith(wd.date));
+              const dPairs = db.schedule.filter(s => s.group_id === user.group_id && s.day_of_week === wd.dow && s.is_even_week === state.scheduleEvenWeek);
+              return `
+                <div class="bg-white rounded-2xl border border-slate-200 p-3 flex flex-col justify-between min-h-[240px]">
+                  <div>
+                    <div class="font-bold text-xs text-slate-900 pb-2 mb-2 border-b border-slate-100 flex items-center justify-between">
+                      <span>${wd.label}</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">${dTasks.length} задач</span>
+                    </div>
+                    <div class="space-y-2">
+                      ${dTasks.map(t => {
+                        const cardColor = getTaskCalendarColor(t);
+                        return `
+                          <div data-edit-task="${t.id}" class="cursor-pointer p-2 rounded-xl text-white text-xs shadow-2xs transition hover:opacity-90" style="background:${cardColor}">
+                            <div class="font-bold leading-snug">${t.title}</div>
+                            <div class="text-[10px] opacity-90 mt-1">${t.deadline.split('T')[1]} • ${getDiscipline(t.discipline_id).name}</div>
+                          </div>
+                        `;
+                      }).join('')}
+                      ${dPairs.map(p => `
+                        <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600">
+                          <div class="font-semibold text-slate-800">🎓 ${p.pair_number} пара (${p.start_time})</div>
+                          <div class="truncate">${getDiscipline(p.discipline_id).name}</div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else {
+        const cells = [];
+        for (let day = 1; day <= 31; day++) {
+          const dStr = `2026-10-${String(day).padStart(2, '0')}`;
+          const dTasks = tasks.filter(t => t.deadline.startsWith(dStr));
+          cells.push(`
+            <div class="bg-white rounded-xl border border-slate-200 p-2 min-h-[95px] flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold ${day === 20 ? 'bg-blue-600 text-white px-1.5 py-0.5 rounded-md' : 'text-slate-700'}">${day} окт</span>
+              </div>
+              <div class="space-y-1 mt-1">
+                ${dTasks.map(t => {
+                  const cardColor = getTaskCalendarColor(t);
+                  return `<div data-edit-task="${t.id}" class="cursor-pointer truncate text-[10px] font-semibold px-1.5 py-0.5 rounded text-white" style="background:${cardColor}" title="${t.title}">${t.title}</div>`;
+                }).join('')}
+              </div>
+            </div>
+          `);
+        }
+        modeBodyHtml = `<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">${cells.join('')}</div>`;
+      }
+
+      const legendHtml = state.calendarColorBy === 'priority'
+        ? db.priorities.map(p => `<span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:${p.color}"></span>${p.name}</span>`).join('')
+        : db.disciplines.map(d => `<span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background:${getDisciplineColor(d.id)}"></span>${d.name}</span>`).join('');
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-bold text-slate-900">Интерактивный календарь</h1>
+              <p class="text-xs text-slate-500">Режимы по дням, неделям и месяцам с цветовой дифференциацией по срочности и учебным дисциплинам</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-semibold">
+                <button type="button" data-cal-mode="day" class="px-3 py-1.5 rounded-lg ${state.calendarMode === 'day' ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600'}">День</button>
+                <button type="button" data-cal-mode="week" class="px-3 py-1.5 rounded-lg ${state.calendarMode === 'week' ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600'}">Неделя</button>
+                <button type="button" data-cal-mode="month" class="px-3 py-1.5 rounded-lg ${state.calendarMode === 'month' ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600'}">Месяц</button>
+              </div>
+              <select id="calendarColorBySelect" aria-label="Цветовая дифференциация" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white font-semibold text-slate-700">
+                <option value="priority" ${state.calendarColorBy === 'priority' ? 'selected' : ''}>Цвет: По уровню срочности</option>
+                <option value="discipline" ${state.calendarColorBy === 'discipline' ? 'selected' : ''}>Цвет: По учебным дисциплинам</option>
+              </select>
+              <select id="calendarDisciplineSelect" aria-label="Фильтр дисциплины" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white font-medium">
+                <option value="all">Все учебные дисциплины</option>
+                ${db.disciplines.map(d => `<option value="${d.id}" ${String(d.id) === String(state.calendarDiscipline) ? 'selected' : ''}>${d.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4 text-xs bg-white px-4 py-2.5 rounded-xl border border-slate-200">
+            <span class="font-semibold text-slate-700">${state.calendarColorBy === 'priority' ? 'Цветовая дифференциация по срочности:' : 'Цветовая дифференциация по дисциплинам:'}</span>
+            ${legendHtml}
+          </div>
+
+          ${modeBodyHtml}
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 5. СТУДЕНТ: РАСПИСАНИЕ ЗАНЯТИЙ (ЧЁТНАЯ / НЕЧЁТНАЯ НЕДЕЛИ И ПРИВЯЗКА ЗАДАЧ)
+    // =========================================================================
+    function renderScheduleView() {
+      const user = getCurrentUser();
+      const items = db.schedule.filter(s => s.group_id === Number(state.scheduleGroupId) && s.is_even_week === state.scheduleEvenWeek);
+
+      const daysHtml = [1, 2, 3, 4, 5].map(dayNum => {
+        const dayPairs = items.filter(s => s.day_of_week === dayNum).sort((a, b) => a.pair_number - b.pair_number);
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <span class="font-bold text-sm text-slate-900">${DAY_NAMES[dayNum]}</span>
+              <span class="text-xs text-slate-500">${state.scheduleEvenWeek ? 'Чётная неделя' : 'Нечётная неделя'}</span>
+            </div>
+            <div class="divide-y divide-slate-100">
+              ${dayPairs.map(p => {
+                const disc = getDiscipline(p.discipline_id);
+                const tch = getTeacher(p.teacher_id);
+                const boundTasks = db.tasks.filter(t => t.user_id === user.id && Number(t.schedule_id) === p.id);
+                return `
+                  <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2 text-xs font-bold text-blue-700">
+                        <span class="px-2 py-0.5 rounded bg-blue-50">${p.pair_number} пара • ${p.start_time}–${p.end_time}</span>
+                        <span class="text-slate-600">📍 ${p.audience}</span>
+                      </div>
+                      <div class="font-bold text-sm text-slate-900">${disc.name}</div>
+                      <div class="text-xs text-slate-500">Преподаватель: ${tch.last_name} ${tch.first_name} ${tch.patronymic || ''} (${tch.degree || ''})</div>
+                      ${boundTasks.length > 0 ? `
+                        <div class="pt-1 flex flex-wrap gap-1.5">
+                          ${boundTasks.map(bt => `<span data-edit-task="${bt.id}" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900">📌 Сдача: ${bt.title}</span>`).join('')}
+                        </div>
+                      ` : ''}
+                    </div>
+                    <button type="button" data-bind-pair="${p.id}" data-bind-disc="${p.discipline_id}" class="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-blue-700 text-xs font-semibold shrink-0 transition">
+                      + Привязать задачу к паре
+                    </button>
+                  </div>
+                `;
+              }).join('') || `<div class="p-5 text-xs text-slate-400 italic">В этот день занятий по расписанию нет.</div>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-bold text-slate-900">Расписание занятий</h1>
+              <p class="text-xs text-slate-500">Разделение на чётную и нечётную недели и привязка конкретной учебной задачи к паре, на которой запланирована её сдача</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="scheduleGroupSelect" aria-label="Учебная группа" class="text-xs border border-slate-300 rounded-xl px-3 py-2 bg-white font-semibold">
+                ${db.groups.map(g => `<option value="${g.id}" ${g.id === Number(state.scheduleGroupId) ? 'selected' : ''}>Группа ${g.name} (${g.course} курс)</option>`).join('')}
+              </select>
+              <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-semibold">
+                <button type="button" data-week-even="false" class="px-3 py-1.5 rounded-lg ${!state.scheduleEvenWeek ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600'}">Нечётная неделя</button>
+                <button type="button" data-week-even="true" class="px-3 py-1.5 rounded-lg ${state.scheduleEvenWeek ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600'}">Чётная неделя</button>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            ${daysHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 6. СТУДЕНТ: ОТЧЁТЫ ОБ УСПЕВАЕМОСТИ И ЭКСПОРТ В XLSX / PDF
+    // =========================================================================
+    function renderReportsView() {
+      const user = getCurrentUser();
+      const fromDate = new Date(state.reportFrom + 'T00:00:00');
+      const toDate = new Date(state.reportTo + 'T23:59:59');
+
+      const periodTasks = db.tasks.filter(t => {
+        if (t.user_id !== user.id) return false;
+        const d = new Date(t.deadline);
+        return d >= fromDate && d <= toDate;
+      });
+
+      const total = periodTasks.length;
+      const done = periodTasks.filter(t => t.status_id === 3).length;
+      const inProg = periodTasks.filter(t => t.status_id === 2).length;
+      const overdue = periodTasks.filter(t => t.status_id === 4).length;
+      const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      const historyRows = db.report_exports
+        .filter(r => r.user_id === user.id)
+        .slice()
+        .reverse()
+        .map(r => `
+          <tr class="border-b border-slate-100 text-xs">
+            <td class="py-2.5 px-3 font-semibold">#${r.id}</td>
+            <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded font-bold ${r.format === 'XLSX' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${r.format}</span></td>
+            <td class="py-2.5 px-3">${r.period_from} — ${r.period_to}</td>
+            <td class="py-2.5 px-3 text-slate-500">${formatDateTime(r.created_at)}</td>
+          </tr>
+        `).join('');
+
+      return `
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-bold text-slate-900">Отчёты об успеваемости</h1>
+              <p class="text-xs text-slate-500">Статистика выполнения задач за выбранный период и экспорт в форматах XLSX (Excel) и PDF</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <label class="font-semibold text-slate-600">Период с:</label>
+              <input type="date" id="reportFromInput" value="${state.reportFrom}" class="px-2.5 py-1.5 border border-slate-300 rounded-xl">
+              <label class="font-semibold text-slate-600">по:</label>
+              <input type="date" id="reportToInput" value="${state.reportTo}" class="px-2.5 py-1.5 border border-slate-300 rounded-xl">
+              <button type="button" id="exportXlsxBtn" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs transition">⬇ Экспорт в XLSX (Excel)</button>
+              <button type="button" id="exportPdfBtn" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-xs transition">⬇ Экспорт в PDF</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="text-xs text-slate-500">Всего за период</div>
+              <div class="text-2xl font-extrabold text-slate-900 mt-1">${total}</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="text-xs text-emerald-600 font-semibold">Сдано</div>
+              <div class="text-2xl font-extrabold text-emerald-600 mt-1">${done}</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="text-xs text-blue-600 font-semibold">В процессе</div>
+              <div class="text-2xl font-extrabold text-blue-600 mt-1">${inProg}</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="text-xs text-rose-600 font-semibold">Просрочено</div>
+              <div class="text-2xl font-extrabold text-rose-600 mt-1">${overdue}</div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 col-span-2 sm:col-span-1">
+              <div class="text-xs text-slate-500">Успеваемость</div>
+              <div class="text-2xl font-extrabold text-indigo-600 mt-1">${rate}%</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h2 class="font-bold text-sm text-slate-900 mb-3">Ведомость выполнения учебных задач (${state.reportFrom} — ${state.reportTo})</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-500 bg-slate-50">
+                    <th class="py-2.5 px-3">Наименование задачи</th>
+                    <th class="py-2.5 px-3">Учебная дисциплина</th>
+                    <th class="py-2.5 px-3">Тип работы</th>
+                    <th class="py-2.5 px-3">Приоритет</th>
+                    <th class="py-2.5 px-3">Статус</th>
+                    <th class="py-2.5 px-3">Дедлайн</th>
+                    <th class="py-2.5 px-3">Дата сдачи</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${periodTasks.map(t => `
+                    <tr>
+                      <td class="py-2.5 px-3 font-semibold text-slate-900">${t.title}</td>
+                      <td class="py-2.5 px-3">${getDiscipline(t.discipline_id).name}</td>
+                      <td class="py-2.5 px-3">${getTaskType(t.type_id).name}</td>
+                      <td class="py-2.5 px-3">${getPriority(t.priority_id).name}</td>
+                      <td class="py-2.5 px-3 font-semibold" style="color:${getStatus(t.status_id).color}">${getStatus(t.status_id).name}</td>
+                      <td class="py-2.5 px-3">${formatDateTime(t.deadline)}</td>
+                      <td class="py-2.5 px-3">${t.completed_at ? formatDateTime(t.completed_at) : '—'}</td>
+                    </tr>
+                  `).join('') || `<tr><td colspan="7" class="py-6 text-center text-slate-400">Нет задач в выбранном диапазоне дат</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 no-print">
+            <h2 class="font-bold text-sm text-slate-900 mb-3">История экспорта отчётов (таблица report_exports)</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-200 text-xs text-slate-500 bg-slate-50">
+                    <th class="py-2 px-3">ID выгрузки</th>
+                    <th class="py-2 px-3">Формат</th>
+                    <th class="py-2 px-3">Период отчёта</th>
+                    <th class="py-2 px-3">Дата создания</th>
+                  </tr>
+                </thead>
+                <tbody>${historyRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 7. СТУДЕНТ: ЛИЧНЫЙ КАБИНЕТ (РЕДАКТИРОВАНИЕ ДАННЫХ, СМЕНА ГРУППЫ И СМЕНА ПАРОЛЯ)
+    // =========================================================================
+    function renderProfileView() {
+      const u = getCurrentUser();
+      const grp = getGroup(u.group_id);
+      return `
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
+          <div class="flex items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-blue-600 text-white font-extrabold text-xl flex items-center justify-center">
+                ${u.last_name[0]}${u.first_name[0]}
+              </div>
+              <div>
+                <h1 class="text-lg font-bold text-slate-900">${u.last_name} ${u.first_name} ${u.patronymic || ''}</h1>
+                <p class="text-xs text-slate-500">Учебная группа: <strong>${grp.name} (${grp.course} курс)</strong> • Зарегистрирован: ${formatDateTime(u.registration_date)}</p>
+              </div>
+            </div>
+          </div>
+
+          <form id="profileUpdateForm" class="space-y-4 text-sm">
+            <h2 class="font-bold text-sm text-slate-800">Редактирование личных данных и учебной группы</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Фамилия *</label>
+                <input type="text" id="profLastName" value="${u.last_name}" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Имя *</label>
+                <input type="text" id="profFirstName" value="${u.first_name}" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Отчество (при наличии)</label>
+                <input type="text" id="profPatronymic" value="${u.patronymic || ''}" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Email (логин) *</label>
+                <input type="email" id="profEmail" value="${u.email}" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Телефон *</label>
+                <input type="tel" id="profPhone" value="${u.phone || ''}" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Смена учебной группы</label>
+              <select id="profGroupId" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+                ${db.groups.map(g => `<option value="${g.id}" ${g.id === u.group_id ? 'selected' : ''}>${g.name} (${g.course} курс, набор ${g.start_year} г.)</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 space-y-3">
+              <h2 class="font-bold text-sm text-slate-800">Смена пароля</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Новый пароль</label>
+                  <input type="password" id="profNewPassword" minlength="6" placeholder="Оставьте пустым, если не меняете" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Подтверждение нового пароля</label>
+                  <input type="password" id="profConfirmPassword" minlength="6" placeholder="Повторите новый пароль" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 flex justify-end">
+              <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">Сохранить изменения</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 8. АДМИНИСТРАТОР: СПИСОК ПОЛЬЗОВАТЕЛЕЙ, АКТИВНОСТЬ, ВЫБОРКИ И УПРАВЛЕНИЕ АККАУНТАМИ
+    // =========================================================================
+    function renderAdminUsersView() {
+      let users = db.users.slice();
+      if (state.adminUserGroupFilter !== 'all') {
+        users = users.filter(u => u.group_id === Number(state.adminUserGroupFilter));
+      }
+
+      const userRows = users.map(u => {
+        const grp = getGroup(u.group_id);
+        let uTasks = db.tasks.filter(t => t.user_id === u.id);
+        if (state.adminUserStatusFilter !== 'all') {
+          uTasks = uTasks.filter(t => t.status_id === Number(state.adminUserStatusFilter));
+        }
+        const doneCount = db.tasks.filter(t => t.user_id === u.id && t.status_id === 3).length;
+        const inProgCount = db.tasks.filter(t => t.user_id === u.id && t.status_id === 2).length;
+        const overdueCount = db.tasks.filter(t => t.user_id === u.id && t.status_id === 4).length;
+
+        return `
+          <tr class="border-b border-slate-100 text-xs hover:bg-slate-50">
+            <td class="py-3 px-3 font-bold text-slate-900">#${u.id}</td>
+            <td class="py-3 px-3">
+              <div class="font-bold text-slate-900">${u.last_name} ${u.first_name} ${u.patronymic || ''}</div>
+              <div class="text-slate-500">${u.email} • ${u.phone || '—'}</div>
+            </td>
+            <td class="py-3 px-3 font-semibold">${grp.name} (${grp.course} курс)</td>
+            <td class="py-3 px-3">${formatDateTime(u.registration_date)}</td>
+            <td class="py-3 px-3">
+              <div class="font-bold text-slate-900">По выборке: ${uTasks.length} задач</div>
+              <div class="text-[11px] text-slate-500">В работе: ${inProgCount} | Сдано: <span class="text-emerald-600 font-semibold">${doneCount}</span> | Просрочено: <span class="text-rose-600 font-semibold">${overdueCount}</span></div>
+            </td>
+            <td class="py-3 px-3">
+              ${u.is_blocked
+                ? `<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[11px]">Заблокирован</span><div class="text-[10px] text-rose-600 mt-0.5">${u.block_reason || ''}</div>`
+                : `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">Активен</span>`}
+            </td>
+            <td class="py-3 px-3 text-right space-x-1 whitespace-nowrap">
+              <button type="button" data-admin-edit-user="${u.id}" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold">Изменить</button>
+              <button type="button" data-toggle-block="${u.id}" class="px-2.5 py-1 rounded-lg ${u.is_blocked ? 'bg-emerald-600 text-white' : 'bg-rose-50 text-rose-700 border border-rose-200'} font-semibold">
+                ${u.is_blocked ? 'Разблокировать' : 'Блокировать'}
+              </button>
+              <button type="button" data-reset-pass="${u.id}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold">Сброс доступа</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-bold text-slate-900">Мониторинг пользователей и выборки по статусам закрытия задач</h1>
+              <p class="text-xs text-slate-500">Контроль активности студентов, блокировка/разблокировка, сброс доступа и корректировка учётных записей</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <select id="adminGroupFilterSelect" aria-label="Фильтр по группе" class="px-3 py-2 border border-slate-300 rounded-xl bg-white font-semibold">
+                <option value="all">Все учебные группы</option>
+                ${db.groups.map(g => `<option value="${g.id}" ${String(g.id) === String(state.adminUserGroupFilter) ? 'selected' : ''}>Группа ${g.name}</option>`).join('')}
+              </select>
+              <select id="adminStatusFilterSelect" aria-label="Выборка по статусу задач" class="px-3 py-2 border border-slate-300 rounded-xl bg-white font-semibold">
+                <option value="all">Выборка: Все статусы задач</option>
+                ${db.statuses.map(s => `<option value="${s.id}" ${String(s.id) === String(state.adminUserStatusFilter) ? 'selected' : ''}>Статус «${s.name}»</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs text-slate-500">
+                    <th class="py-3 px-3">ID</th>
+                    <th class="py-3 px-3">Студент и контакты</th>
+                    <th class="py-3 px-3">Группа</th>
+                    <th class="py-3 px-3">Дата регистрации</th>
+                    <th class="py-3 px-3">Активность и выборка по задачам</th>
+                    <th class="py-3 px-3">Статус аккаунта</th>
+                    <th class="py-3 px-3 text-right">Управление учётной записью</th>
+                  </tr>
+                </thead>
+                <tbody>${userRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 9. АДМИНИСТРАТОР: ДОБАВЛЕНИЕ, РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ДИСЦИПЛИН И ПРЕПОДАВАТЕЛЕЙ
+    // =========================================================================
+    function renderAdminDisciplinesView() {
+      const editDisc = state.editingDiscId ? db.disciplines.find(d => d.id === Number(state.editingDiscId)) : null;
+      const editTch = state.editingTeacherId ? db.teachers.find(t => t.id === Number(state.editingTeacherId)) : null;
+
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Учебные дисциплины -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+            <h2 class="text-base font-bold text-slate-900">Учебные дисциплины (добавление, редактирование, удаление)</h2>
+            <form id="addDisciplineForm" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+              <div class="font-bold text-slate-700">${editDisc ? `Редактирование дисциплины #${editDisc.id}` : 'Добавить учебную дисциплину'}</div>
+              <input type="text" id="newDiscName" required value="${editDisc ? editDisc.name : ''}" placeholder="Наименование учебной дисциплины *" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
+              <input type="text" id="newDiscDesc" value="${editDisc ? (editDisc.description || '') : ''}" placeholder="Описание дисциплины" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
+              <div class="flex items-center gap-2">
+                <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold">${editDisc ? 'Сохранить изменения' : '+ Добавить дисциплину'}</button>
+                ${editDisc ? `<button type="button" id="cancelEditDiscBtn" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold">Отмена</button>` : ''}
+              </div>
+            </form>
+            <div class="divide-y divide-slate-100 text-xs">
+              ${db.disciplines.map(d => `
+                <div class="py-3 flex items-start justify-between gap-3">
+                  <div>
+                    <div class="font-bold text-slate-900">${d.name}</div>
+                    <div class="text-slate-500 mt-0.5">${d.description || '—'}</div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" data-edit-disc="${d.id}" class="text-blue-600 hover:underline font-semibold">Изменить</button>
+                    <button type="button" data-del-disc="${d.id}" class="text-rose-600 hover:underline font-semibold">Удалить</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Преподаватели -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+            <h2 class="text-base font-bold text-slate-900">Преподаватели (добавление, редактирование, удаление)</h2>
+            <form id="addTeacherForm" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+              <div class="font-bold text-slate-700">${editTch ? `Редактирование преподавателя #${editTch.id}` : 'Добавить преподавателя'}</div>
+              <div class="grid grid-cols-3 gap-2">
+                <input type="text" id="newTchLast" required value="${editTch ? editTch.last_name : ''}" placeholder="Фамилия *" class="px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                <input type="text" id="newTchFirst" required value="${editTch ? editTch.first_name : ''}" placeholder="Имя *" class="px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                <input type="text" id="newTchPatr" value="${editTch ? (editTch.patronymic || '') : ''}" placeholder="Отчество" class="px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <input type="email" id="newTchEmail" value="${editTch ? (editTch.email || '') : ''}" placeholder="Email" class="px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                <input type="tel" id="newTchPhone" value="${editTch ? (editTch.phone || '') : ''}" placeholder="Телефон" class="px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                <input type="text" id="newTchDegree" value="${editTch ? (editTch.degree || '') : ''}" placeholder="Учёная степень" class="px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold">${editTch ? 'Сохранить изменения' : '+ Добавить преподавателя'}</button>
+                ${editTch ? `<button type="button" id="cancelEditTchBtn" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold">Отмена</button>` : ''}
+              </div>
+            </form>
+            <div class="divide-y divide-slate-100 text-xs">
+              ${db.teachers.map(t => `
+                <div class="py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div class="font-bold text-slate-900">${t.last_name} ${t.first_name} ${t.patronymic || ''}</div>
+                    <div class="text-slate-500">${t.degree || 'Преподаватель'} • ${t.email || ''} • ${t.phone || ''}</div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" data-edit-teacher="${t.id}" class="text-blue-600 hover:underline font-semibold">Изменить</button>
+                    <button type="button" data-del-teacher="${t.id}" class="text-rose-600 hover:underline font-semibold">Удалить</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 10. АДМИНИСТРАТОР: УЧЕБНЫЕ ГРУППЫ И БАЗОВАЯ СЕТКА РАСПИСАНИЯ
+    // =========================================================================
+    function renderAdminScheduleView() {
+      const editGrp = state.editingGroupId ? db.groups.find(g => g.id === Number(state.editingGroupId)) : null;
+      const editSch = state.editingSchedId ? db.schedule.find(s => s.id === Number(state.editingSchedId)) : null;
+
+      return `
+        <div class="space-y-6">
+          <!-- Управление учебными группами -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+            <h2 class="text-base font-bold text-slate-900">Справочник учебных групп (groups)</h2>
+            <form id="adminGroupForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <label class="block font-semibold mb-1">Номер группы *</label>
+                <input type="text" id="admGrpName" required value="${editGrp ? editGrp.name : ''}" placeholder="Например: ИСП-23" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Курс *</label>
+                <input type="number" id="admGrpCourse" min="1" max="6" required value="${editGrp ? editGrp.course : 3}" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Год начала обучения *</label>
+                <input type="number" id="admGrpYear" min="2020" max="2030" required value="${editGrp ? editGrp.start_year : 2024}" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div class="flex items-end gap-2">
+                <button type="submit" class="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold">${editGrp ? 'Сохранить группу' : '+ Добавить группу'}</button>
+                ${editGrp ? `<button type="button" id="cancelEditGrpBtn" class="px-3 py-2 rounded-lg border border-slate-300 bg-white">✕</button>` : ''}
+              </div>
+            </form>
+            <div class="flex flex-wrap gap-2 text-xs">
+              ${db.groups.map(g => `
+                <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3">
+                  <span><strong>${g.name}</strong> (${g.course} курс, ${g.start_year} г.)</span>
+                  <button type="button" data-edit-group="${g.id}" class="text-blue-600 hover:underline font-semibold">Изм.</button>
+                  <button type="button" data-del-group="${g.id}" class="text-rose-600 hover:underline font-semibold">Удал.</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Управление базовой сеткой расписания -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+            <h2 class="text-base font-bold text-slate-900">Редактирование базовой сетки расписания (schedule)</h2>
+            <form id="addScheduleForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <label class="block font-semibold mb-1">Учебная группа</label>
+                <select id="admSchGroup" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                  ${db.groups.map(g => `<option value="${g.id}" ${editSch && editSch.group_id === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Учебная дисциплина</label>
+                <select id="admSchDisc" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                  ${db.disciplines.map(d => `<option value="${d.id}" ${editSch && editSch.discipline_id === d.id ? 'selected' : ''}>${d.name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Преподаватель</label>
+                <select id="admSchTeach" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                  ${db.teachers.map(t => `<option value="${t.id}" ${editSch && editSch.teacher_id === t.id ? 'selected' : ''}>${t.last_name} ${t.first_name[0]}.</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">День недели и № пары</label>
+                <div class="flex gap-1.5">
+                  <select id="admSchDay" class="w-2/3 px-2 py-2 border border-slate-300 rounded-lg bg-white">
+                    ${[1,2,3,4,5,6].map(d => `<option value="${d}" ${editSch && editSch.day_of_week === d ? 'selected' : ''}>${DAY_NAMES[d]}</option>`).join('')}
+                  </select>
+                  <input type="number" id="admSchPair" min="1" max="7" value="${editSch ? editSch.pair_number : 1}" class="w-1/3 px-2 py-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Аудитория *</label>
+                <input type="text" id="admSchAud" required value="${editSch ? editSch.audience : ''}" placeholder="Ауд. 301" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Время (начало / конец)</label>
+                <div class="flex gap-1.5">
+                  <input type="time" id="admSchStart" value="${editSch ? editSch.start_time : '09:00'}" class="w-1/2 px-2 py-2 border border-slate-300 rounded-lg bg-white">
+                  <input type="time" id="admSchEnd" value="${editSch ? editSch.end_time : '10:30'}" class="w-1/2 px-2 py-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Неделя</label>
+                <select id="admSchEven" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg bg-white">
+                  <option value="false" ${editSch && !editSch.is_even_week ? 'selected' : ''}>Нечётная неделя</option>
+                  <option value="true" ${editSch && editSch.is_even_week ? 'selected' : ''}>Чётная неделя</option>
+                </select>
+              </div>
+              <div class="flex items-end gap-1.5">
+                <button type="submit" class="w-full py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold">${editSch ? 'Сохранить пару' : '+ В расписание'}</button>
+                ${editSch ? `<button type="button" id="cancelEditSchBtn" class="px-3 py-2 rounded-lg border border-slate-300 bg-white">✕</button>` : ''}
+              </div>
+            </form>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                    <th class="py-2 px-3">Группа</th>
+                    <th class="py-2 px-3">День / Пара</th>
+                    <th class="py-2 px-3">Неделя</th>
+                    <th class="py-2 px-3">Дисциплина</th>
+                    <th class="py-2 px-3">Преподаватель</th>
+                    <th class="py-2 px-3">Аудитория</th>
+                    <th class="py-2 px-3 text-right">Действие</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${db.schedule.map(s => `
+                    <tr>
+                      <td class="py-2 px-3 font-bold">${getGroup(s.group_id).name}</td>
+                      <td class="py-2 px-3">${DAY_NAMES[s.day_of_week]}, ${s.pair_number} пара (${s.start_time}–${s.end_time})</td>
+                      <td class="py-2 px-3">${s.is_even_week ? 'Чётная' : 'Нечётная'}</td>
+                      <td class="py-2 px-3 font-semibold">${getDiscipline(s.discipline_id).name}</td>
+                      <td class="py-2 px-3">${getTeacher(s.teacher_id).last_name}</td>
+                      <td class="py-2 px-3">${s.audience}</td>
+                      <td class="py-2 px-3 text-right space-x-2 whitespace-nowrap">
+                        <button type="button" data-edit-sched="${s.id}" class="text-blue-600 hover:underline font-semibold">Изменить</button>
+                        <button type="button" data-del-sched="${s.id}" class="text-rose-600 hover:underline font-semibold">Удалить</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 11. АДМИНИСТРАТОР: УПРАВЛЕНИЕ СПРАВОЧНИКАМИ И КОРРЕКТИРОВКА ОШИБОЧНЫХ СИСТЕМНЫХ ЗАПИСЕЙ
+    // =========================================================================
+    function renderAdminRecordsView() {
+      return `
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 class="text-lg font-bold text-slate-900">Управление справочниками и корректировка системных записей</h1>
+              <p class="text-xs text-slate-500">Контроль системных справочников (приоритеты, статусы, типы работ, типы напоминаний) и исправление ошибочных записей задач</p>
+            </div>
+            <button type="button" id="resetDemoDataBtn" class="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700">Восстановить исходные записи БД</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="font-bold text-slate-900 mb-2">Справочник приоритетов (priorities)</div>
+              <div class="space-y-1.5">
+                ${db.priorities.map(p => `<div class="flex items-center justify-between"><span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:${p.color}"></span>${p.name}</span><span class="text-slate-400">Ур. ${p.level}</span></div>`).join('')}
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="font-bold text-slate-900 mb-2">Справочник статусов (statuses)</div>
+              <div class="space-y-1.5">
+                ${db.statuses.map(s => `<div class="flex items-center justify-between"><span style="color:${s.color}" class="font-semibold">${s.name}</span><span class="text-slate-400">${s.is_final ? 'Финальный' : 'Активный'}</span></div>`).join('')}
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="font-bold text-slate-900 mb-2">Типы учебных работ (task_types)</div>
+              <div class="space-y-1.5">
+                ${db.task_types.map(t => `<div class="text-slate-700">• ${t.name}</div>`).join('')}
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200">
+              <div class="font-bold text-slate-900 mb-2">Типы напоминаний (reminder_types)</div>
+              <div class="space-y-1.5">
+                ${db.reminder_types.map(r => `<div class="text-slate-700">• ${r.name}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- Реестр всех системных записей задач для корректировки ошибочных записей -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h2 class="font-bold text-sm text-slate-900 mb-3">Реестр системных записей задач всех пользователей (корректировка ошибочных записей)</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                    <th class="py-2 px-3">ID</th>
+                    <th class="py-2 px-3">Студент</th>
+                    <th class="py-2 px-3">Задача</th>
+                    <th class="py-2 px-3">Дисциплина</th>
+                    <th class="py-2 px-3">Дедлайн</th>
+                    <th class="py-2 px-3">Статус</th>
+                    <th class="py-2 px-3 text-right">Корректировка</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${db.tasks.map(t => {
+                    const stUser = db.users.find(u => u.id === t.user_id) || { last_name: '—', first_name: '' };
+                    return `
+                      <tr>
+                        <td class="py-2.5 px-3 font-bold">#${t.id}</td>
+                        <td class="py-2.5 px-3">${stUser.last_name} ${stUser.first_name}</td>
+                        <td class="py-2.5 px-3 font-semibold text-slate-900">${t.title}</td>
+                        <td class="py-2.5 px-3">${getDiscipline(t.discipline_id).name}</td>
+                        <td class="py-2.5 px-3">${formatDateTime(t.deadline)}</td>
+                        <td class="py-2.5 px-3 font-semibold" style="color:${getStatus(t.status_id).color}">${getStatus(t.status_id).name}</td>
+                        <td class="py-2.5 px-3 text-right space-x-2 whitespace-nowrap">
+                          <button type="button" data-edit-task="${t.id}" class="text-blue-600 hover:underline font-semibold">Исправить</button>
+                          <button type="button" data-delete-task="${t.id}" class="text-rose-600 hover:underline font-semibold">Удалить</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // МОДАЛЬНЫЕ ОКНА (ЗАДАЧА, НАПОМИНАНИЯ, КОРРЕКТИРОВКА ПОЛЬЗОВАТЕЛЯ)
+    // =========================================================================
+    function openTaskModal(taskId = null, prefillScheduleId = null, prefillDiscId = null) {
+      const modal = document.getElementById('taskModal');
+      const titleEl = document.getElementById('taskModalTitle');
+      const user = getCurrentUser();
+
+      document.getElementById('taskFormDiscipline').innerHTML = db.disciplines
+        .map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+      document.getElementById('taskFormType').innerHTML = db.task_types
+        .map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      document.getElementById('taskFormPriority').innerHTML = db.priorities
+        .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      document.getElementById('taskFormStatus').innerHTML = db.statuses
+        .map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+      const userSched = db.schedule.filter(s => s.group_id === user.group_id);
+      document.getElementById('taskFormSchedule').innerHTML = `<option value="">— Без привязки к паре —</option>` +
+        userSched.map(s => `<option value="${s.id}">${DAY_SHORT[s.day_of_week]}, ${s.pair_number} пара (${s.start_time}) — ${getDiscipline(s.discipline_id).name} (${s.is_even_week ? 'Чёт' : 'Нечёт'})</option>`).join('');
+
+      if (taskId) {
+        const t = db.tasks.find(x => x.id === Number(taskId));
+        if (!t) return;
+        titleEl.textContent = `Редактирование задачи #${t.id}`;
+        document.getElementById('taskFormId').value = t.id;
+        document.getElementById('taskFormTitle').value = t.title;
+        document.getElementById('taskFormDiscipline').value = t.discipline_id;
+        document.getElementById('taskFormType').value = t.type_id;
+        document.getElementById('taskFormDeadline').value = t.deadline;
+        document.getElementById('taskFormPriority').value = t.priority_id;
+        document.getElementById('taskFormStatus').value = t.status_id;
+        document.getElementById('taskFormSchedule').value = t.schedule_id || '';
+        document.getElementById('taskFormDesc').value = t.description || '';
+      } else {
+        titleEl.textContent = 'Создание новой учебной задачи';
+        document.getElementById('taskFormId').value = '';
+        document.getElementById('taskFormTitle').value = '';
+        document.getElementById('taskFormDiscipline').value = prefillDiscId || db.disciplines[0].id;
+        document.getElementById('taskFormType').value = 1;
+        document.getElementById('taskFormDeadline').value = '2026-10-24T12:00';
+        document.getElementById('taskFormPriority').value = 3;
+        document.getElementById('taskFormStatus').value = 1;
+        document.getElementById('taskFormSchedule').value = prefillScheduleId || '';
+        document.getElementById('taskFormDesc').value = '';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTaskModal() {
+      const modal = document.getElementById('taskModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openRemindersModal() {
+      const modal = document.getElementById('remindersModal');
+      const body = document.getElementById('remindersModalBody');
+      const userRems = db.reminders.filter(r => r.user_id === Number(state.currentUserId));
+
+      body.innerHTML = userRems.map(r => {
+        const task = db.tasks.find(t => t.id === r.task_id);
+        const rt = db.reminder_types.find(x => x.id === r.reminder_type_id);
+        return `
+          <div class="p-3.5 rounded-xl border ${r.is_sent ? 'bg-slate-50 border-slate-200 opacity-75' : 'bg-blue-50/60 border-blue-200'} flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-bold text-slate-900">${task ? task.title : 'Задача удалена'}</div>
+              <div class="text-[11px] text-slate-600 mt-0.5">Напоминание: <strong>${rt ? rt.name : ''}</strong> • Дедлайн: ${formatDateTime(r.scheduled_at)}</div>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.is_sent ? 'bg-slate-200 text-slate-700' : 'bg-blue-600 text-white'}">
+              ${r.is_sent ? 'Прочитано' : 'Активно'}
+            </span>
+          </div>
+        `;
+      }).join('') || `<div class="text-center text-xs text-slate-400 py-6">Напоминаний пока нет.</div>`;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRemindersModal() {
+      const modal = document.getElementById('remindersModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openAdminUserModal(userId) {
+      const u = db.users.find(x => x.id === Number(userId));
+      if (!u) return;
+      document.getElementById('admEditUserId').value = u.id;
+      document.getElementById('admEditUserLast').value = u.last_name;
+      document.getElementById('admEditUserFirst').value = u.first_name;
+      document.getElementById('admEditUserPatr').value = u.patronymic || '';
+      document.getElementById('admEditUserEmail').value = u.email;
+      document.getElementById('admEditUserPhone').value = u.phone || '';
+      document.getElementById('admEditUserBlockReason').value = u.block_reason || '';
+      document.getElementById('admEditUserGroup').innerHTML = db.groups
+        .map(g => `<option value="${g.id}" ${g.id === u.group_id ? 'selected' : ''}>${g.name} (${g.course} курс)</option>`).join('');
+
+      const modal = document.getElementById('adminEditUserModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAdminUserModal() {
+      const modal = document.getElementById('adminEditUserModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // =========================================================================
+    // ЭКСПОРТ ОТЧЁТА В ФОРМАТАХ XLSX (EXCEL) И PDF
+    // =========================================================================
+    function exportReport(format) {
+      const user = getCurrentUser();
+      const grp = getGroup(user.group_id);
+      const fromDate = new Date(state.reportFrom + 'T00:00:00');
+      const toDate = new Date(state.reportTo + 'T23:59:59');
+
+      const tasks = db.tasks.filter(t => {
+        if (t.user_id !== user.id) return false;
+        const d = new Date(t.deadline);
+        return d >= fromDate && d <= toDate;
+      });
+
+      const newId = db.report_exports.length > 0 ? Math.max(...db.report_exports.map(r => r.id)) + 1 : 1;
+      db.report_exports.push({
+        id: newId,
+        user_id: user.id,
+        format: format,
+        period_from: state.reportFrom,
+        period_to: state.reportTo,
+        created_at: new Date().toISOString().slice(0, 16)
+      });
+      saveDb();
+
+      if (format === 'XLSX') {
+        const xmlRows = tasks.map(t => `
+          <Row>
+            <Cell><Data ss:Type="Number">${t.id}</Data></Cell>
+            <Cell><Data ss:Type="String">${t.title.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</Data></Cell>
+            <Cell><Data ss:Type="String">${getDiscipline(t.discipline_id).name}</Data></Cell>
+            <Cell><Data ss:Type="String">${getTaskType(t.type_id).name}</Data></Cell>
+            <Cell><Data ss:Type="String">${getPriority(t.priority_id).name}</Data></Cell>
+            <Cell><Data ss:Type="String">${getStatus(t.status_id).name}</Data></Cell>
+            <Cell><Data ss:Type="String">${formatDateTime(t.deadline)}</Data></Cell>
+            <Cell><Data ss:Type="String">${t.completed_at ? formatDateTime(t.completed_at) : '—'}</Data></Cell>
+          </Row>`).join('');
+
+        const excelXml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Worksheet ss:Name="Отчёт об успеваемости">
+  <Table>
+   <Row>
+    <Cell><Data ss:Type="String">ID</Data></Cell>
+    <Cell><Data ss:Type="String">Наименование задачи</Data></Cell>
+    <Cell><Data ss:Type="String">Учебная дисциплина</Data></Cell>
+    <Cell><Data ss:Type="String">Тип работы</Data></Cell>
+    <Cell><Data ss:Type="String">Приоритет</Data></Cell>
+    <Cell><Data ss:Type="String">Статус</Data></Cell>
+    <Cell><Data ss:Type="String">Дедлайн</Data></Cell>
+    <Cell><Data ss:Type="String">Дата завершения</Data></Cell>
+   </Row>
+   ${xmlRows}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+
+        const blob = new Blob([excelXml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Отчет_успеваемости_${grp.name}_${state.reportFrom}_${state.reportTo}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Отчёт об успеваемости в формате XLSX (Excel) выгружен!', 'success');
+      } else {
+        showToast('Формирование PDF-отчёта: открыто окно сохранения в PDF!', 'success');
+        window.print();
+      }
+      renderMain();
+    }
+
+    // =========================================================================
+    // ОБРАБОТЧИКИ СОБЫТИЙ
+    // =========================================================================
+    document.addEventListener('click', (e) => {
+      // Переключение разделов меню
+      const navBtn = e.target.closest('[data-nav]');
+      if (navBtn) {
+        state.activeTab = navBtn.dataset.nav;
+        renderMain();
+        return;
+      }
+
+      // ВЫХОД ИЗ АККАУНТА (перебрасывает строго на вкладку «Гость» и очищает сессию)
+      if (e.target.closest('#logoutBtn')) {
+        state.role = 'guest';
+        state.currentUserId = null;
+        state.currentAdminId = null;
+        state.activeTab = 'guest-home';
+        state.searchQuery = '';
+        const searchInputEl = document.getElementById('globalSearchInput');
+        if (searchInputEl) searchInputEl.value = '';
+        saveSession();
+        showToast('Вы вышли из системы и переведены в режим «Гость».', 'info');
+        renderMain();
+        return;
+      }
+
+      // Подстановка тестовых данных на форме входа
+      if (e.target.closest('#fillZaharLoginBtn')) {
+        document.getElementById('loginEmail').value = 'zahar@student.edu.ru';
+        document.getElementById('loginPassword').value = '123456';
+        return;
+      }
+      if (e.target.closest('#fillBlockedLoginBtn')) {
+        document.getElementById('loginEmail').value = 'kuznetsov.mo@student.edu.ru';
+        document.getElementById('loginPassword').value = '123456';
+        return;
+      }
+
+      // Клик по логотипу
+      if (e.target.closest('#brandLogoBtn')) {
+        state.activeTab = state.role === 'guest' ? 'guest-home' : state.role === 'admin' ? 'admin-users' : 'dashboard';
+        renderMain();
+        return;
+      }
+
+      // Модалка задачи
+      if (e.target.closest('#openNewTaskModalBtn')) {
+        openTaskModal(null);
+        return;
+      }
+      const bindBtn = e.target.closest('[data-bind-pair]');
+      if (bindBtn) {
+        openTaskModal(null, bindBtn.dataset.bindPair, bindBtn.dataset.bindDisc);
+        return;
+      }
+      const editBtn = e.target.closest('[data-edit-task]');
+      if (editBtn) {
+        openTaskModal(editBtn.dataset.editTask);
+        return;
+      }
+      const delBtn = e.target.closest('[data-delete-task]');
+      if (delBtn) {
+        const id = Number(delBtn.dataset.deleteTask);
+        db.tasks = db.tasks.filter(t => t.id !== id);
+        db.reminders = db.reminders.filter(r => r.task_id !== id);
+        saveDb();
+        showToast(`Задача #${id} удалена.`, 'info');
+        renderMain();
+        return;
+      }
+      if (e.target.closest('#closeTaskModalBtn') || e.target.closest('#cancelTaskModalBtn')) {
+        closeTaskModal();
+        return;
+      }
+
+      // Модалка напоминаний
+      if (e.target.closest('#remindersDrawerBtn')) {
+        openRemindersModal();
+        return;
+      }
+      if (e.target.closest('#closeRemindersModalBtn') || e.target.closest('#closeRemindersBottomBtn')) {
+        closeRemindersModal();
+        return;
+      }
+      if (e.target.closest('#markAllRemindersSentBtn')) {
+        db.reminders.forEach(r => {
+          if (r.user_id === Number(state.currentUserId)) {
+            r.is_sent = true;
+            r.sent_at = new Date().toISOString().slice(0, 16);
+          }
+        });
+        saveDb();
+        openRemindersModal();
+        renderHeaderAndNav();
+        showToast('Все напоминания отмечены как прочитанные.', 'success');
+        return;
+      }
+
+      // Карусель дедлайнов
+      if (e.target.closest('#carouselPrevBtn')) {
+        const track = document.getElementById('deadlineCarouselTrack');
+        if (track) track.scrollBy({ left: -320, behavior: 'smooth' });
+        return;
+      }
+      if (e.target.closest('#carouselNextBtn')) {
+        const track = document.getElementById('deadlineCarouselTrack');
+        if (track) track.scrollBy({ left: 320, behavior: 'smooth' });
+        return;
+      }
+
+      // Чётность недели
+      if (e.target.closest('#dashToggleWeekTypeBtn')) {
+        state.scheduleEvenWeek = !state.scheduleEvenWeek;
+        renderMain();
+        return;
+      }
+      const weekEvenBtn = e.target.closest('[data-week-even]');
+      if (weekEvenBtn) {
+        state.scheduleEvenWeek = weekEvenBtn.dataset.weekEven === 'true';
+        renderMain();
+        return;
+      }
+
+      // Режим календаря
+      const calModeBtn = e.target.closest('[data-cal-mode]');
+      if (calModeBtn) {
+        state.calendarMode = calModeBtn.dataset.calMode;
+        renderMain();
+        return;
+      }
+
+      // Экспорт отчётов
+      if (e.target.closest('#exportXlsxBtn')) {
+        exportReport('XLSX');
+        return;
+      }
+      if (e.target.closest('#exportPdfBtn')) {
+        exportReport('PDF');
+        return;
+      }
+
+      // Админка: редактирование пользователя
+      const admEditUserBtn = e.target.closest('[data-admin-edit-user]');
+      if (admEditUserBtn) {
+        openAdminUserModal(admEditUserBtn.dataset.adminEditUser);
+        return;
+      }
+      if (e.target.closest('#closeAdminUserModalBtn') || e.target.closest('#cancelAdminUserModalBtn')) {
+        closeAdminUserModal();
+        return;
+      }
+
+      // Админка: блокировка / разблокировка студента
+      const blockBtn = e.target.closest('[data-toggle-block]');
+      if (blockBtn) {
+        const uid = Number(blockBtn.dataset.toggleBlock);
+        const u = db.users.find(x => x.id === uid);
+        if (u) {
+          u.is_blocked = !u.is_blocked;
+          u.block_reason = u.is_blocked ? (u.block_reason || 'Заблокирован администратором учебного отдела') : '';
+          saveDb();
+          showToast(u.is_blocked ? `Аккаунт студента ${u.last_name} заблокирован.` : `Аккаунт студента ${u.last_name} разблокирован.`, 'info');
+          renderMain();
+        }
+        return;
+      }
+
+      // Админка: сброс доступа
+      const resetPassBtn = e.target.closest('[data-reset-pass]');
+      if (resetPassBtn) {
+        const uid = Number(resetPassBtn.dataset.resetPass);
+        const u = db.users.find(x => x.id === uid);
+        if (u) {
+          u.password_hash = '123456';
+          u.is_blocked = false;
+          u.block_reason = '';
+          saveDb();
+          showToast(`Доступ студента ${u.last_name} ${u.first_name} восстановлен, временный пароль: 123456`, 'success');
+          renderMain();
+        }
+        return;
+      }
+
+      // Админка: редактирование и удаление дисциплин / преподавателей / групп / расписания
+      const editDiscBtn = e.target.closest('[data-edit-disc]');
+      if (editDiscBtn) {
+        state.editingDiscId = Number(editDiscBtn.dataset.editDisc);
+        renderMain();
+        return;
+      }
+      if (e.target.closest('#cancelEditDiscBtn')) {
+        state.editingDiscId = null;
+        renderMain();
+        return;
+      }
+      const delDisc = e.target.closest('[data-del-disc]');
+      if (delDisc) {
+        const id = Number(delDisc.dataset.delDisc);
+        db.disciplines = db.disciplines.filter(d => d.id !== id);
+        saveDb();
+        showToast('Учебная дисциплина удалена.');
+        renderMain();
+        return;
+      }
+
+      const editTchBtn = e.target.closest('[data-edit-teacher]');
+      if (editTchBtn) {
+        state.editingTeacherId = Number(editTchBtn.dataset.editTeacher);
+        renderMain();
+        return;
+      }
+      if (e.target.closest('#cancelEditTchBtn')) {
+        state.editingTeacherId = null;
+        renderMain();
+        return;
+      }
+      const delTch = e.target.closest('[data-del-teacher]');
+      if (delTch) {
+        const id = Number(delTch.dataset.delTeacher);
+        db.teachers = db.teachers.filter(t => t.id !== id);
+        saveDb();
+        showToast('Преподаватель удалён из справочника.');
+        renderMain();
+        return;
+      }
+
+      const editGrpBtn = e.target.closest('[data-edit-group]');
+      if (editGrpBtn) {
+        state.editingGroupId = Number(editGrpBtn.dataset.editGroup);
+        renderMain();
+        return;
+      }
+      if (e.target.closest('#cancelEditGrpBtn')) {
+        state.editingGroupId = null;
+        renderMain();
+        return;
+      }
+      const delGrpBtn = e.target.closest('[data-del-group]');
+      if (delGrpBtn) {
+        const id = Number(delGrpBtn.dataset.delGroup);
+        db.groups = db.groups.filter(g => g.id !== id);
+        saveDb();
+        showToast('Учебная группа удалена.');
+        renderMain();
+        return;
+      }
+
+      const editSchBtn = e.target.closest('[data-edit-sched]');
+      if (editSchBtn) {
+        state.editingSchedId = Number(editSchBtn.dataset.editSched);
+        renderMain();
+        return;
+      }
+      if (e.target.closest('#cancelEditSchBtn')) {
+        state.editingSchedId = null;
+        renderMain();
+        return;
+      }
+      const delSch = e.target.closest('[data-del-sched]');
+      if (delSch) {
+        const id = Number(delSch.dataset.delSched);
+        db.schedule = db.schedule.filter(s => s.id !== id);
+        saveDb();
+        showToast('Занятие удалено из базовой сетки расписания.');
+        renderMain();
+        return;
+      }
+
+      // Сброс базы к исходным данным
+      if (e.target.closest('#resetDemoDataBtn')) {
+        db = JSON.parse(JSON.stringify(INITIAL_DB));
+        saveDb();
+        showToast('Исходные системные записи базы данных восстановлены.', 'success');
+        renderMain();
+        return;
+      }
+
+      const socBtn = e.target.closest('[data-action="social-link"]');
+      if (socBtn) {
+        showToast(`Открыта ссылка: ${socBtn.dataset.network}`);
+      }
+    });
+
+    // Обработка выпадающих списков и переключателей
+    document.addEventListener('change', (e) => {
+      const quickStatus = e.target.closest('[data-quick-status]');
+      if (quickStatus) {
+        const taskId = Number(quickStatus.dataset.quickStatus);
+        const newStatusId = Number(quickStatus.value);
+        const task = db.tasks.find(t => t.id === taskId);
+        if (task) {
+          task.status_id = newStatusId;
+          const st = getStatus(newStatusId);
+          task.completed_at = st.is_final ? new Date().toISOString().slice(0, 16) : null;
+          saveDb();
+          showToast(`Статус задачи «${task.title}» изменён на «${st.name}»`, 'success');
+          renderMain();
+        }
+        return;
+      }
+
+      if (e.target.id === 'regGroupId') {
+        const sel = e.target.options[e.target.selectedIndex];
+        if (sel && sel.dataset.course) {
+          document.getElementById('regCourse').value = sel.dataset.course;
+        }
+        return;
+      }
+
+      if (e.target.id === 'filterStatusSelect') { state.taskFilterStatus = e.target.value; renderMain(); }
+      if (e.target.id === 'filterPrioritySelect') { state.taskFilterPriority = e.target.value; renderMain(); }
+      if (e.target.id === 'filterDisciplineSelect') { state.taskFilterDiscipline = e.target.value; renderMain(); }
+      if (e.target.id === 'calendarColorBySelect') { state.calendarColorBy = e.target.value; renderMain(); }
+      if (e.target.id === 'calendarDisciplineSelect') { state.calendarDiscipline = e.target.value; renderMain(); }
+      if (e.target.id === 'calendarDayPicker') { state.calendarSelectedDay = e.target.value; renderMain(); }
+      if (e.target.id === 'scheduleGroupSelect') { state.scheduleGroupId = Number(e.target.value); renderMain(); }
+      if (e.target.id === 'reportFromInput') { state.reportFrom = e.target.value; renderMain(); }
+      if (e.target.id === 'reportToInput') { state.reportTo = e.target.value; renderMain(); }
+      if (e.target.id === 'adminGroupFilterSelect') { state.adminUserGroupFilter = e.target.value; renderMain(); }
+      if (e.target.id === 'adminStatusFilterSelect') { state.adminUserStatusFilter = e.target.value; renderMain(); }
+    });
+
+    // Поиск по задачам и предметам в шапке
+    const searchInput = document.getElementById('globalSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+      if (state.role === 'student' && state.activeTab !== 'dashboard' && state.activeTab !== 'tasks') {
+        state.activeTab = 'tasks';
+      }
+      renderMain();
+    });
+    clearSearchBtn.addEventListener('click', () => {
+      state.searchQuery = '';
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      renderMain();
+    });
+
+    // Отправка форм
+    document.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // 1. Вход студента
+      if (e.target.id === 'studentLoginForm') {
+        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const pass = document.getElementById('loginPassword').value;
+        const user = db.users.find(u => u.email.toLowerCase() === email && u.password_hash === pass);
+        if (!user) {
+          showToast('Ошибка: неверный логин (email) или пароль!', 'error');
+          return;
+        }
+        if (user.is_blocked) {
+          showToast(`Вход заблокирован: ${user.block_reason || 'Обратитесь к администратору'}`, 'error');
+          return;
+        }
+        state.currentUserId = user.id;
+        state.currentAdminId = null;
+        state.scheduleGroupId = user.group_id;
+        state.role = 'student';
+        state.activeTab = 'dashboard';
+        saveSession();
+        showToast(`Вы успешно вошли как студент: ${user.last_name} ${user.first_name}`, 'success');
+        renderMain();
+      }
+
+      // 2. Регистрация студента (с валидацией email, телефона и совпадения паролей)
+      if (e.target.id === 'studentRegisterForm') {
+        const last = document.getElementById('regLastName').value.trim();
+        const first = document.getElementById('regFirstName').value.trim();
+        const patr = document.getElementById('regPatronymic').value.trim();
+        const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const phone = document.getElementById('regPhone').value.trim();
+        const groupId = Number(document.getElementById('regGroupId').value);
+        const pass = document.getElementById('regPassword').value;
+        const conf = document.getElementById('regConfirm').value;
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (!emailRegex.test(email)) {
+          showToast('Ошибка: введите корректный адрес электронной почты!', 'error');
+          return;
+        }
+        if (phoneDigits.length < 10) {
+          showToast('Ошибка: введите корректный номер телефона (не менее 10 цифр)!', 'error');
+          return;
+        }
+        if (pass !== conf) {
+          showToast('Ошибка: пароль и подтверждение пароля не совпадают!', 'error');
+          return;
+        }
+        if (db.users.some(u => u.email.toLowerCase() === email || (u.phone && u.phone.replace(/\D/g, '') === phoneDigits))) {
+          showToast('Учётная запись с таким email или телефоном уже существует!', 'error');
+          return;
+        }
+        const newId = db.users.length > 0 ? Math.max(...db.users.map(u => u.id)) + 1 : 1;
+        db.users.push({
+          id: newId,
+          last_name: last,
+          first_name: first,
+          patronymic: patr,
+          email: email,
+          phone: phone,
+          password_hash: pass,
+          group_id: groupId,
+          registration_date: new Date().toISOString().slice(0, 16),
+          is_admin: false,
+          is_blocked: false,
+          block_reason: ''
+        });
+        saveDb();
+        state.currentUserId = newId;
+        state.currentAdminId = null;
+        state.scheduleGroupId = groupId;
+        state.role = 'student';
+        state.activeTab = 'dashboard';
+        saveSession();
+        showToast('Регистрация успешно завершена! Дата регистрации сохранена в БД.', 'success');
+        renderMain();
+      }
+
+      // 3. Отдельный вход администратора
+      if (e.target.id === 'adminLoginForm') {
+        const login = document.getElementById('adminLoginInput').value.trim();
+        const pass = document.getElementById('adminPasswordInput').value;
+        const adm = db.admins.find(a => a.login === login && a.password_hash === pass);
+        if (!adm) {
+          showToast('Ошибка: неверный логин или пароль администратора!', 'error');
+          return;
+        }
+        adm.last_login_at = new Date().toISOString().slice(0, 16);
+        saveDb();
+        state.role = 'admin';
+        state.currentAdminId = adm.id;
+        state.currentUserId = null;
+        state.activeTab = 'admin-users';
+        saveSession();
+        showToast('Вы вошли в панель администрирования.', 'success');
+        renderMain();
+      }
+
+      // 4. Создание / редактирование учебной задачи
+      if (e.target.id === 'taskForm') {
+        const idVal = document.getElementById('taskFormId').value;
+        const title = document.getElementById('taskFormTitle').value.trim();
+        const discId = Number(document.getElementById('taskFormDiscipline').value);
+        const typeId = Number(document.getElementById('taskFormType').value);
+        const deadline = document.getElementById('taskFormDeadline').value;
+        const prioId = Number(document.getElementById('taskFormPriority').value);
+        const statusId = Number(document.getElementById('taskFormStatus').value);
+        const schedVal = document.getElementById('taskFormSchedule').value;
+        const desc = document.getElementById('taskFormDesc').value.trim();
+        const stObj = getStatus(statusId);
+
+        if (idVal) {
+          const t = db.tasks.find(x => x.id === Number(idVal));
+          if (t) {
+            t.title = title;
+            t.discipline_id = discId;
+            t.type_id = typeId;
+            t.deadline = deadline;
+            t.priority_id = prioId;
+            t.status_id = statusId;
+            t.schedule_id = schedVal ? Number(schedVal) : null;
+            t.description = desc;
+            t.completed_at = stObj.is_final ? (t.completed_at || new Date().toISOString().slice(0, 16)) : null;
+          }
+          showToast('Изменения задачи сохранены!', 'success');
+        } else {
+          const ownerId = state.role === 'student' ? Number(state.currentUserId) : 1;
+          const newId = db.tasks.length > 0 ? Math.max(...db.tasks.map(x => x.id)) + 1 : 1;
+          db.tasks.push({
+            id: newId,
+            title: title,
+            description: desc,
+            deadline: deadline,
+            priority_id: prioId,
+            status_id: statusId,
+            type_id: typeId,
+            discipline_id: discId,
+            user_id: ownerId,
+            schedule_id: schedVal ? Number(schedVal) : null,
+            created_at: new Date().toISOString().slice(0, 16),
+            completed_at: stObj.is_final ? new Date().toISOString().slice(0, 16) : null
+          });
+
+          const checks = [
+            { el: 'rem3d', typeId: 1 },
+            { el: 'rem24h', typeId: 2 },
+            { el: 'remDay', typeId: 3 }
+          ];
+          checks.forEach(c => {
+            if (document.getElementById(c.el).checked) {
+              const rId = db.reminders.length > 0 ? Math.max(...db.reminders.map(r => r.id)) + 1 : 1;
+              db.reminders.push({
+                id: rId,
+                task_id: newId,
+                user_id: ownerId,
+                reminder_type_id: c.typeId,
+                scheduled_at: deadline,
+                sent_at: null,
+                is_sent: false
+              });
+            }
+          });
+          showToast('Учебная задача создана и напоминания настроены!', 'success');
+        }
+        saveDb();
+        closeTaskModal();
+        renderMain();
+      }
+
+      // 5. Обновление личного кабинета студента
+      if (e.target.id === 'profileUpdateForm') {
+        const u = getCurrentUser();
+        const newPass = document.getElementById('profNewPassword').value;
+        const confPass = document.getElementById('profConfirmPassword').value;
+        if (newPass && newPass !== confPass) {
+          showToast('Ошибка: новый пароль и подтверждение не совпадают!', 'error');
+          return;
+        }
+        u.last_name = document.getElementById('profLastName').value.trim();
+        u.first_name = document.getElementById('profFirstName').value.trim();
+        u.patronymic = document.getElementById('profPatronymic').value.trim();
+        u.email = document.getElementById('profEmail').value.trim();
+        u.phone = document.getElementById('profPhone').value.trim();
+        u.group_id = Number(document.getElementById('profGroupId').value);
+        state.scheduleGroupId = u.group_id;
+        if (newPass) u.password_hash = newPass;
+        saveDb();
+        showToast('Личные данные, учебная группа и пароль обновлены!', 'success');
+        renderMain();
+      }
+
+      // 6. Админка: корректировка учётной записи студента
+      if (e.target.id === 'adminEditUserForm') {
+        const uid = Number(document.getElementById('admEditUserId').value);
+        const u = db.users.find(x => x.id === uid);
+        if (u) {
+          u.last_name = document.getElementById('admEditUserLast').value.trim();
+          u.first_name = document.getElementById('admEditUserFirst').value.trim();
+          u.patronymic = document.getElementById('admEditUserPatr').value.trim();
+          u.email = document.getElementById('admEditUserEmail').value.trim();
+          u.phone = document.getElementById('admEditUserPhone').value.trim();
+          u.group_id = Number(document.getElementById('admEditUserGroup').value);
+          u.block_reason = document.getElementById('admEditUserBlockReason').value.trim();
+          saveDb();
+          closeAdminUserModal();
+          showToast('Учётная запись студента скорректирована.', 'success');
+          renderMain();
+        }
+      }
+
+      // 7. Админка: добавление или редактирование дисциплины
+      if (e.target.id === 'addDisciplineForm') {
+        const name = document.getElementById('newDiscName').value.trim();
+        const desc = document.getElementById('newDiscDesc').value.trim();
+        if (state.editingDiscId) {
+          const d = db.disciplines.find(x => x.id === Number(state.editingDiscId));
+          if (d) { d.name = name; d.description = desc; }
+          state.editingDiscId = null;
+          showToast('Учебная дисциплина отредактирована.', 'success');
+        } else {
+          const newId = db.disciplines.length > 0 ? Math.max(...db.disciplines.map(d => d.id)) + 1 : 1;
+          db.disciplines.push({ id: newId, name, description: desc });
+          showToast(`Дисциплина «${name}» добавлена.`, 'success');
+        }
+        saveDb();
+        renderMain();
+      }
+
+      // 8. Админка: добавление или редактирование преподавателя
+      if (e.target.id === 'addTeacherForm') {
+        const last = document.getElementById('newTchLast').value.trim();
+        const first = document.getElementById('newTchFirst').value.trim();
+        const patr = document.getElementById('newTchPatr').value.trim();
+        const email = document.getElementById('newTchEmail').value.trim();
+        const phone = document.getElementById('newTchPhone').value.trim();
+        const degree = document.getElementById('newTchDegree').value.trim();
+        if (state.editingTeacherId) {
+          const t = db.teachers.find(x => x.id === Number(state.editingTeacherId));
+          if (t) {
+            t.last_name = last; t.first_name = first; t.patronymic = patr;
+            t.email = email; t.phone = phone; t.degree = degree;
+          }
+          state.editingTeacherId = null;
+          showToast('Данные преподавателя обновлены.', 'success');
+        } else {
+          const newId = db.teachers.length > 0 ? Math.max(...db.teachers.map(t => t.id)) + 1 : 1;
+          db.teachers.push({ id: newId, last_name: last, first_name: first, patronymic: patr, email, phone, degree });
+          showToast(`Преподаватель ${last} ${first} добавлен.`, 'success');
+        }
+        saveDb();
+        renderMain();
+      }
+
+      // 9. Админка: добавление или редактирование учебной группы
+      if (e.target.id === 'adminGroupForm') {
+        const name = document.getElementById('admGrpName').value.trim();
+        const course = Number(document.getElementById('admGrpCourse').value);
+        const year = Number(document.getElementById('admGrpYear').value);
+        if (state.editingGroupId) {
+          const g = db.groups.find(x => x.id === Number(state.editingGroupId));
+          if (g) { g.name = name; g.course = course; g.start_year = year; }
+          state.editingGroupId = null;
+          showToast('Учебная группа обновлена.', 'success');
+        } else {
+          const newId = db.groups.length > 0 ? Math.max(...db.groups.map(g => g.id)) + 1 : 1;
+          db.groups.push({ id: newId, name, course, start_year: year });
+          showToast(`Учебная группа ${name} добавлена.`, 'success');
+        }
+        saveDb();
+        renderMain();
+      }
+
+      // 10. Админка: добавление или редактирование пары в расписании
+      if (e.target.id === 'addScheduleForm') {
+        const payload = {
+          group_id: Number(document.getElementById('admSchGroup').value),
+          discipline_id: Number(document.getElementById('admSchDisc').value),
+          teacher_id: Number(document.getElementById('admSchTeach').value),
+          day_of_week: Number(document.getElementById('admSchDay').value),
+          pair_number: Number(document.getElementById('admSchPair').value),
+          is_even_week: document.getElementById('admSchEven').value === 'true',
+          audience: document.getElementById('admSchAud').value.trim(),
+          start_time: document.getElementById('admSchStart').value,
+          end_time: document.getElementById('admSchEnd').value
+        };
+        if (state.editingSchedId) {
+          const s = db.schedule.find(x => x.id === Number(state.editingSchedId));
+          if (s) Object.assign(s, payload);
+          state.editingSchedId = null;
+          showToast('Занятие в расписании обновлено!', 'success');
+        } else {
+          const newId = db.schedule.length > 0 ? Math.max(...db.schedule.map(s => s.id)) + 1 : 1;
+          db.schedule.push({ id: newId, ...payload });
+          showToast('Занятие добавлено в сетку расписания!', 'success');
+        }
+        saveDb();
+        renderMain();
+      }
+    });
+
+    
+    // =========================================================================
+    // ПОДДЕРЖКА СМЕНЫ ТЕМЫ (СВЕТЛАЯ / ТЁМНАЯ) И СМЕНЫ ЯЗЫКА (RU / EN)
+    // =========================================================================
+    state.theme = 'light'; // 'light' | 'dark'
+    state.lang = 'ru';     // 'ru' | 'en'
+
+    try {
+      const savedPrefs = localStorage.getItem('studyflow_prefs_v1');
+      if (savedPrefs) {
+        const prefs = JSON.parse(savedPrefs);
+        if (prefs.theme === 'dark' || prefs.theme === 'light') state.theme = prefs.theme;
+        if (prefs.lang === 'en' || prefs.lang === 'ru') state.lang = prefs.lang;
+      }
+    } catch (e) {}
+
+    function savePrefs() {
+      try {
+        localStorage.setItem('studyflow_prefs_v1', JSON.stringify({
+          theme: state.theme,
+          lang: state.lang
+        }));
+      } catch (e) {}
+    }
+
+    function applyTheme() {
+      const root = document.documentElement;
+      if (state.theme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      const iconEl = document.getElementById('themeToggleIcon');
+      const labelEl = document.getElementById('themeToggleLabel');
+      if (iconEl) iconEl.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+      if (labelEl) {
+        if (state.lang === 'en') {
+          labelEl.textContent = state.theme === 'dark' ? 'Light' : 'Dark';
+        } else {
+          labelEl.textContent = state.theme === 'dark' ? 'Светлая' : 'Тёмная';
+        }
+      }
+      const langLbl = document.getElementById('langToggleLabel');
+      if (langLbl) langLbl.textContent = state.lang.toUpperCase();
+    }
+
+    // Словарь перевода фраз интерфейса (RU -> EN)
+    const RU_TO_EN = {
+      'Управление учебными задачами и дедлайнами': 'Academic Task & Deadline Management',
+      'Поиск по учебным задачам и дисциплинам...': 'Search academic tasks and disciplines...',
+      'Гость (Неавторизован)': 'Guest (Unauthorized)',
+      'Гость': 'Guest',
+      'Войти': 'Log In',
+      'Регистрация': 'Register',
+      'Вход админа': 'Admin Login',
+      'Выйти': 'Log Out',
+      'Гость (О системе и инструкция)': 'Guest (Overview & Guide)',
+      'Вход для студента': 'Student Login',
+      'Регистрация студента': 'Student Registration',
+      'Вход для администратора': 'Administrator Login',
+      'Главная (Дашборд)': 'Home (Dashboard)',
+      'Мои задачи': 'My Tasks',
+      'Календарь': 'Calendar',
+      'Расписание занятий': 'Class Schedule',
+      'Отчёты': 'Reports',
+      'Личный кабинет': 'Personal Profile',
+      'Режим администрирования': 'Administration Mode',
+      'Пользователи, активность и выборки': 'Users, Activity & Queries',
+      'Учебные дисциплины и преподаватели': 'Disciplines & Teachers',
+      'Группы и сетка расписания': 'Groups & Master Schedule',
+      'Управление справочниками и записями': 'Directories & System Records',
+      'Режим гостя (Неавторизованный пользователь)': 'Guest Mode (Unauthorized User)',
+      'Система управления учебными задачами и дедлайнами StudyFlow': 'StudyFlow Academic Task & Deadline Management System',
+      'Единое веб-приложение для студентов и учебного отдела, объединяющее функции планировщика задач (по прототипам Todoist и Notion), интерактивного календаря с расписанием чётной и нечётной недель, автоматических напоминаний и формирования отчётов об успеваемости в форматах XLSX и PDF.': 'A unified web application for students and academic staff combining a task planner (inspired by Todoist and Notion), an interactive calendar with even/odd week schedules, automated deadline reminders, and performance report exports in XLSX and PDF.',
+      'Войти как студент': 'Log In as Student',
+      'Панель администратора': 'Administrator Panel',
+      'Описание возможностей системы': 'System Capabilities Overview',
+      'Ведение и приоритизация учебных задач': 'Academic Task Management & Prioritization',
+      'Создание лабораторных, практических и курсовых работ с указанием дисциплины, описания, дедлайна, приоритета («Низкий», «Средний», «Высокий», «Критический») и статуса («К выполнению», «В процессе», «Сдано», «Просрочено»).': 'Create lab, practical, and coursework tasks with discipline, description, deadline, priority (Low, Medium, High, Critical), and completion status (To Do, In Progress, Completed, Overdue).',
+      'Интерактивный календарь и расписание': 'Interactive Calendar & Class Schedule',
+      'Отображение задач по дням, неделям и месяцам с цветовой дифференциацией по срочности и дисциплинам. Интеграция с расписанием пар (чётная/нечётная недели) и привязка сдачи задачи к конкретной паре.': 'View tasks by day, week, and month with color differentiation by urgency and discipline. Integrate with class schedules (even/odd weeks) and link task submissions to specific class pairs.',
+      'Напоминания и экспорт отчётов (XLSX / PDF)': 'Reminders & Report Export (XLSX / PDF)',
+      'Автоматические напоминания за 3 дня, за 24 часа и в день наступления дедлайна. Формирование статистики успеваемости за выбранный период и выгрузка в Excel (XLSX) или PDF.': 'Automated notifications 3 days before, 24 hours before, and on the day of the deadline. Generate completion statistics for a selected period and export to Excel (XLSX) or PDF.',
+      'Инструкция по началу работы с системой': 'Getting Started Guide',
+      'Шаг 1. Регистрация': 'Step 1. Registration',
+      'Перейдите в раздел «Регистрация студента», укажите ФИО (отчество — при наличии), email или телефон, выберите номер группы, курс и задайте пароль.': 'Open Student Registration, enter your full name (patronymic optional), email or phone, select your group and course, and set a password.',
+      'Шаг 2. Авторизация и профиль': 'Step 2. Login & Profile',
+      'Войдите по логину (email) и паролю. При необходимости отредактируйте данные, группу или пароль в «Личном кабинете».': 'Log in using your email and password. Update your personal info, study group, or password anytime in your Personal Profile.',
+      'Шаг 3. Планирование и календарь': 'Step 3. Planning & Calendar',
+      'Добавляйте задачи в разделе «Мои задачи», привязывайте их к парам своего расписания и отслеживайте горящие сроки на дашборде и в календаре.': 'Add tasks in My Tasks, link them to your class schedule pairs, and track urgent deadlines on the dashboard and calendar.',
+      'Шаг 4. Статистика и отчётность': 'Step 4. Statistics & Reports',
+      'Отмечайте сданные работы и формируйте отчёты об успеваемости за семестр или месяц с выгрузкой в XLSX или PDF.': 'Mark completed assignments and export semester or monthly performance reports in XLSX or PDF formats.',
+      'Вход в личный кабинет студента': 'Student Account Login',
+      'Вход выполняется по логину (email) и паролю': 'Sign in using your email login and password',
+      'Логин (Email) *': 'Login (Email) *',
+      'Пароль *': 'Password *',
+      'Введите пароль': 'Enter password',
+      'Подставить': 'Fill Demo',
+      'Проверить': 'Test Blocked',
+      'Войти в систему': 'Sign In',
+      'Нет учётной записи?': 'Do not have an account?',
+      'Зарегистрироваться': 'Register',
+      'Регистрация пользователя (студента)': 'Student Registration',
+      'Заполните данные анкеты. Поле «Отчество» не является обязательным. Дата регистрации сохраняется в БД автоматически.': 'Complete the registration form. Patronymic is optional. Registration date is saved automatically.',
+      'Фамилия *': 'Last Name *',
+      'Имя *': 'First Name *',
+      'Отчество (при наличии)': 'Patronymic (optional)',
+      'Отчество': 'Patronymic',
+      'Необязательно': 'Optional',
+      'Email (логин для входа) *': 'Email (login) *',
+      'Email (логин) *': 'Email (login) *',
+      'Телефон *': 'Phone *',
+      'Телефон': 'Phone',
+      'Номер учебной группы *': 'Study Group *',
+      'Курс *': 'Course Year *',
+      'Подтверждение пароля *': 'Confirm Password *',
+      'Не менее 6 символов': 'At least 6 characters',
+      'Повторите пароль': 'Repeat password',
+      'Отдельный механизм авторизации администратора': 'Separate Administrator Authentication Portal',
+      'Вход в режим администрирования': 'Administrator Portal Login',
+      'Управление дисциплинами, преподавателями, группами, расписанием и учётными записями пользователей': 'Manage disciplines, teachers, student groups, master schedule, and user accounts',
+      'Логин администратора *': 'Administrator Login *',
+      'Пароль администратора *': 'Administrator Password *',
+      'Войти в панель администратора': 'Sign In to Admin Panel',
+      'Интерактивный дашборд студента': 'Interactive Student Dashboard',
+      '+ Новая задача': '+ New Task',
+      '+ Добавить задачу': '+ Add Task',
+      '🔥 Карусель ближайших горящих дедлайнов': '🔥 Upcoming Urgent Deadlines Carousel',
+      'Задачи с ближайшим сроком сдачи и высоким уровнем срочности': 'Tasks with the closest deadlines and highest urgency levels',
+      'Срок сдачи (дедлайн):': 'Deadline:',
+      'Открыть': 'Open',
+      'Изменить': 'Edit',
+      'Редактировать': 'Edit',
+      'Удалить': 'Delete',
+      'Исправить': 'Fix Record',
+      'Интеграция учебного расписания и привязанных к парам задач': 'Integration of class schedule and tasks linked to class pairs',
+      'Полный календарь →': 'Full Calendar →',
+      '⚡ Список наиболее приоритетных задач': '⚡ Highest Priority Tasks',
+      'Отсортировано по уровню приоритета и сроку выполнения': 'Sorted by priority level and deadline date',
+      'Мои учебные задачи': 'My Academic Tasks',
+      'Создание, редактирование и удаление учебных задач (лабораторные, практических, курсовые работы)': 'Create, edit, and delete academic tasks (lab works, practical assignments, coursework)',
+      'Создание, редактирование и удаление учебных задач (лабораторные, практические, курсовые работы)': 'Create, edit, and delete academic tasks (lab works, practical assignments, coursework)',
+      'Фильтр по статусу выполнения': 'Filter by Completion Status',
+      'Все статусы («К выполнению», «В процессе», «Сдано», «Просрочено»)': 'All Statuses (To Do, In Progress, Completed, Overdue)',
+      'Фильтр по приоритету': 'Filter by Priority',
+      'Все уровни приоритета': 'All Priority Levels',
+      'Фильтр по учебной дисциплине': 'Filter by Discipline',
+      'Все учебные дисциплины': 'All Academic Disciplines',
+      'Интерактивный календарь': 'Interactive Calendar',
+      'Режимы по дням, неделям и месяцам с цветовой дифференциацией по срочности и учебным дисциплинам': 'Day, week, and month views with color differentiation by urgency and academic disciplines',
+      'День': 'Day',
+      'Неделя': 'Week',
+      'Месяц': 'Month',
+      'Цвет: По уровню срочности': 'Color: By Urgency Level',
+      'Цвет: По учебным дисциплинам': 'Color: By Academic Discipline',
+      'Цветовая дифференциация по срочности:': 'Color Differentiation by Urgency:',
+      'Цветовая дифференциация по дисциплинам:': 'Color Differentiation by Discipline:',
+      'Расписание занятий': 'Class Schedule',
+      'Разделение на чётную и нечётную недели и привязка конкретной учебной задачи к паре, на которой запланирована её сдача': 'Even and odd week division with task linking to the specific class pair scheduled for submission',
+      'Нечётная неделя': 'Odd Week',
+      'Чётная неделя': 'Even Week',
+      '+ Привязать задачу к паре': '+ Link Task to Class',
+      'В этот день занятий по расписанию нет.': 'No classes scheduled on this day.',
+      'Занятий нет': 'No classes',
+      'Отчёты об успеваемости': 'Academic Performance Reports',
+      'Статистика выполнения задач за выбранный период и экспорт в форматах XLSX (Excel) и PDF': 'Task completion statistics for the selected period and export in XLSX (Excel) and PDF formats',
+      'Период с:': 'Period from:',
+      'по:': 'to:',
+      '⬇ Экспорт в XLSX (Excel)': '⬇ Export to XLSX (Excel)',
+      '⬇ Экспорт в PDF': '⬇ Export to PDF',
+      'Всего за период': 'Total in Period',
+      'Сдано': 'Completed',
+      'В процессе': 'In Progress',
+      'Просрочено': 'Overdue',
+      'К выполнению': 'To Do',
+      'Успеваемость': 'Completion Rate',
+      'Наименование задачи': 'Task Title',
+      'Наименование задачи *': 'Task Title *',
+      'Учебная дисциплина': 'Academic Discipline',
+      'Учебная дисциплина *': 'Academic Discipline *',
+      'Тип работы': 'Task Type',
+      'Тип учебной работы *': 'Task Type *',
+      'Приоритет': 'Priority',
+      'Приоритет *': 'Priority *',
+      'Статус': 'Status',
+      'Статус выполнения *': 'Completion Status *',
+      'Дедлайн': 'Deadline',
+      'Дата и время дедлайна *': 'Deadline Date & Time *',
+      'Дата сдачи': 'Completed At',
+      'История экспорта отчётов (таблица report_exports)': 'Report Export History (report_exports table)',
+      'ID выгрузки': 'Export ID',
+      'Формат': 'Format',
+      'Период отчёта': 'Report Period',
+      'Дата создания': 'Created At',
+      'Редактирование личных данных и учебной группы': 'Edit Personal Information & Study Group',
+      'Смена учебной группы': 'Change Study Group',
+      'Смена пароля': 'Change Password',
+      'Новый пароль': 'New Password',
+      'Подтверждение нового пароля': 'Confirm New Password',
+      'Оставьте пустым, если не меняете': 'Leave blank to keep current password',
+      'Повторите новый пароль': 'Repeat new password',
+      'Сохранить изменения': 'Save Changes',
+      'Мониторинг пользователей и выборки по статусам закрытия задач': 'User Monitoring & Task Completion Status Queries',
+      'Контроль активности студентов, блокировка/разблокировка, сброс доступа и корректировка учётных записей': 'Monitor student activity, block/unblock accounts, reset access, and edit user records',
+      'Все учебные группы': 'All Study Groups',
+      'Выборка: Все статусы задач': 'Query: All Task Statuses',
+      'Студент и контакты': 'Student & Contacts',
+      'Группа': 'Group',
+      'Дата регистрации': 'Registration Date',
+      'Активность и выборка по задачам': 'Activity & Task Query',
+      'Статус аккаунта': 'Account Status',
+      'Управление учётной записью': 'Account Actions',
+      'Активен': 'Active',
+      'Заблокирован': 'Blocked',
+      'Блокировать': 'Block',
+      'Разблокировать': 'Unblock',
+      'Сброс доступа': 'Reset Access',
+      'Учебные дисциплины (добавление, редактирование, удаление)': 'Academic Disciplines (Add, Edit, Delete)',
+      'Добавить учебную дисциплину': 'Add Academic Discipline',
+      '+ Добавить дисциплину': '+ Add Discipline',
+      'Преподаватели (добавление, редактирование, удаление)': 'Teachers (Add, Edit, Delete)',
+      'Добавить преподавателя': 'Add Teacher',
+      '+ Добавить преподавателя': '+ Add Teacher',
+      'Справочник учебных групп (groups)': 'Study Groups Directory (groups)',
+      '+ Добавить группу': '+ Add Group',
+      'Сохранить группу': 'Save Group',
+      'Редактирование базовой сетки расписания (schedule)': 'Master Class Schedule Management (schedule)',
+      '+ В расписание': '+ Add to Schedule',
+      'Сохранить пару': 'Save Class',
+      'Управление справочниками и корректировка системных записей': 'System Directories & Record Correction',
+      'Восстановить исходные записи БД': 'Restore Default DB Records',
+      'Новая учебная задача': 'New Academic Task',
+      'Создание новой учебной задачи': 'Create New Academic Task',
+      'Привязка к паре в расписании (необязательно)': 'Link to Class Schedule Pair (optional)',
+      'Описание задачи': 'Task Description',
+      'Настройка напоминаний о приближающемся сроке сдачи:': 'Configure approaching deadline reminders:',
+      'За 3 дня до дедлайна': '3 days before deadline',
+      'За 24 часа до дедлайна': '24 hours before deadline',
+      'В день наступления дедлайна': 'On the deadline day',
+      'Отмена': 'Cancel',
+      'Сохранить задачу': 'Save Task',
+      'Напоминания о приближающихся дедлайнах': 'Approaching Deadline Reminders',
+      'Уведомления за 3 дня, за 24 часа и в день наступления дедлайна': 'Notifications 3 days before, 24 hours before, and on the deadline day',
+      'Отметить все как прочитанные': 'Mark all as read',
+      'Закрыть': 'Close',
+      'Корректировка учётной записи студента': 'Edit Student Account Record',
+      'Низкий': 'Low',
+      'Средний': 'Medium',
+      'Высокий': 'High',
+      'Критический': 'Critical',
+      'Лабораторная работа': 'Lab Work',
+      'Практическая работа': 'Practical Work',
+      'Курсовая работа': 'Coursework',
+      'Понедельник': 'Monday',
+      'Вторник': 'Tuesday',
+      'Среда': 'Wednesday',
+      'Четверг': 'Thursday',
+      'Пятница': 'Friday',
+      'Суббота': 'Saturday',
+      'StudyFlow — Система управления учебными задачами': 'StudyFlow — Academic Task Management System',
+      'Реквизиты и служебная информация': 'Details & System Information',
+      'Социальные сети и ресурсы': 'Social Networks & Resources'
+    };
+
+    const EN_TO_RU = {};
+    Object.keys(RU_TO_EN).forEach(k => { EN_TO_RU[RU_TO_EN[k]] = k; });
+
+    function translateDomTree(rootEl) {
+      if (!rootEl) return;
+      const dict = state.lang === 'en' ? RU_TO_EN : EN_TO_RU;
+
+      // Перевод текстовых узлов
+      const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(node => {
+        const raw = node.nodeValue;
+        const trimmed = raw.trim();
+        if (!trimmed) return;
+        if (dict[trimmed]) {
+          node.nodeValue = raw.replace(trimmed, dict[trimmed]);
+        } else if (state.lang === 'en') {
+          let replaced = raw;
+          replaced = replaced
+            .replace(/Всего задач:/g, 'Total tasks:')
+            .replace(/В процессе:/g, 'In progress:')
+            .replace(/Сдано:/g, 'Completed:')
+            .replace(/Просрочено:/g, 'Overdue:')
+            .replace(/Студент:/g, 'Student:')
+            .replace(/Группа:/g, 'Group:')
+            .replace(/курс/g, 'yr')
+            .replace(/приоритет/g, 'priority')
+            .replace(/пар\(ы\)/g, 'classes')
+            .replace(/задач/g, 'tasks')
+            .replace(/пара/g, 'class')
+            .replace(/По выборке:/g, 'Matched:')
+            .replace(/Неделя: Чётная \(2-я\) \(Сменить\)/g, 'Week: Even (2nd) (Switch)')
+            .replace(/Неделя: Нечётная \(1-я\) \(Сменить\)/g, 'Week: Odd (1st) (Switch)');
+          if (replaced !== raw) node.nodeValue = replaced;
+        }
+      });
+
+      // Перевод placeholder у полей ввода
+      rootEl.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el => {
+        const ph = el.getAttribute('placeholder');
+        if (dict[ph]) el.setAttribute('placeholder', dict[ph]);
+      });
+    }
+
+    // Расширяем renderMain и модальные окна поддержкой темы и языка
+    const _origRenderMain = renderMain;
+    renderMain = function() {
+      _origRenderMain();
+      applyTheme();
+      if (state.lang === 'en') {
+        translateDomTree(document.body);
+      }
+    };
+
+    const _origOpenTaskModal = openTaskModal;
+    openTaskModal = function(taskId = null, prefillScheduleId = null, prefillDiscId = null) {
+      _origOpenTaskModal(taskId, prefillScheduleId, prefillDiscId);
+      if (state.lang === 'en') translateDomTree(document.getElementById('taskModal'));
+    };
+
+    const _origOpenRemindersModal = openRemindersModal;
+    openRemindersModal = function() {
+      _origOpenRemindersModal();
+      if (state.lang === 'en') translateDomTree(document.getElementById('remindersModal'));
+    };
+
+    const _origOpenAdminUserModal = openAdminUserModal;
+    openAdminUserModal = function(userId) {
+      _origOpenAdminUserModal(userId);
+      if (state.lang === 'en') translateDomTree(document.getElementById('adminEditUserModal'));
+    };
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#themeToggleBtn')) {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        savePrefs();
+        applyTheme();
+        const msg = state.lang === 'en'
+          ? `Theme switched to ${state.theme === 'dark' ? 'Dark' : 'Light'}`
+          : `Включена ${state.theme === 'dark' ? 'тёмная' : 'светлая'} тема оформления`;
+        showToast(msg, 'info');
+        return;
+      }
+
+      if (e.target.closest('#langToggleBtn')) {
+        state.lang = state.lang === 'ru' ? 'en' : 'ru';
+        document.documentElement.lang = state.lang;
+        savePrefs();
+        // Если переключили обратно на русский, перезагрузим статические подписи в шапке/подвале через renderMain
+        renderMain();
+        if (state.lang === 'ru') {
+          translateDomTree(document.body);
+        }
+        const msg = state.lang === 'en'
+          ? 'Interface language switched to English (EN)'
+          : 'Язык интерфейса переключён на русский (RU)';
+        showToast(msg, 'info');
+        return;
+      }
+    });
+
+    // Первичный рендер
+    renderMain();
+  </script>
+</body>
+</html>
